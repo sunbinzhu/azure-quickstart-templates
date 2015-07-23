@@ -1,6 +1,6 @@
 {
   "itemDisplayName": "Create an HPC cluster with custom compute node image",
-  "description": "This template creates an HPC cluster with custom compute node image.",
+  "description": "This template creates an HPC cluster with custom compute node image",
   "summary": "This template creates an HPC cluster with custom HPC compute node image",
   "githubUsername": "sunbinzhu",
   "dateUpdated": "2015-07-22"

@@ -83,7 +83,7 @@
         "computeNodeSourceImageVHDName": {
             "type": "string",
             "metadata": {
-                "description": "The VHD name of the custom compute node image, for example, mycustomhpccn.vhd. The OS of the image must be Windows Server 2012 or Windows Server 2012 R2."
+                "description": "The VHD name of the custom compute node image, for example, mycustomhpccn.vhd. It can be an image without HPC Pack installed, or an image captured from an HPC compute node. The OS version of the image must be Windows 2008 R2, Windows Server 2012 or Windows Server 2012 R2."
             }
         },
         "computeNodeSourceImageContainer": {

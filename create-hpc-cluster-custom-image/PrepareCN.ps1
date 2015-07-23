@@ -26,7 +26,7 @@ function TraceInfo($log)
 
 function InstallComputeNode
 {
-    param($clustername, $nodetype)
+    param($clustername)
 
     if(Test-Path -Path "C:\HPCPatches")
     {
@@ -43,7 +43,7 @@ function InstallComputeNode
     }
     
     # Test the connection to head node
-    TraceInfo "Testing the connection to $ClusterName ..."
+    TraceInfo "Testing the connection to $clustername ..."
     $maxRetries = 50
     $retry = 0
     while($true)
@@ -51,9 +51,9 @@ function InstallComputeNode
         # Flush the DNS cache in case the cached head node ip is wrong.
         # Do not use Clear-DnsClientCache because it is not supported in Windows Server 2008 R2
         Start-Process -FilePath ipconfig -ArgumentList "/flushdns" -Wait -NoNewWindow | Out-Null
-        if(Test-Connection -ComputerName $ClusterName -Quiet)
+        if(Test-Connection -ComputerName $clustername -Quiet)
         {
-            TraceInfo "Head node $ClusterName is now reachable."
+            TraceInfo "Head node $clustername is now reachable."
             break
         }
         else
@@ -65,112 +65,45 @@ function InstallComputeNode
             }
             else
             {
-                throw "Head node $ClusterName is unreachable"
+                throw "Head node $clustername is unreachable"
             }
         }
     }
 
-    # Because ScheduledTasks PowerShell module not available in Windows Server 2008 R2,
-    # We use ComObject Schedule.Service to schedule task
-    try
+    $retry = 0
+    while($true)
     {
-        $schdService = new-object -ComObject "Schedule.Service"
-        $schdService.Connect("localhost") | Out-Null
-        $rootFolder = $schdService.GetFolder("\")
-        $taskDefinition = $schdService.NewTask(0)
-        $testPathAction = $taskDefinition.Actions.Create(0)
-        $testPathAction.Path = "PowerShell.exe"
-        $testPathPshCmd = '$retry=0; while($true){if(Test-Path \\{ClusterName}\REMINST\setup.exe){Copy-Item \\{ClusterName}\REMINST\Patches\KB*.exe C:\HPCPatches -ErrorAction SilentlyContinue; return} elseif($retry -lt 30){$retry++; start-sleep -seconds 20} else{throw ''not available''}}'
-        $testPathPshCmd = $testPathPshCmd.Replace("{ClusterName}", $ClusterName)
-        $testPathAction.Arguments = "-Command `"$testPathPshCmd`""
-        $Action = $taskDefinition.Actions.Create(0)
-        $Action.Path = "\\$clustername\REMINST\setup.exe"
-        $Action.Arguments = "-unattend -{0}:{1}" -f $nodetype.ToLower(), $clustername
-        $hpcSetupTask = $Rootfolder.RegisterTaskDefinition("hpcsetup", $taskDefinition, 2, "system", $null, 5)
-        TraceInfo  "HPC $nodetype installation task scheduled"
-    }
-    catch
-    {
-        throw "Failed to schedule HPC $nodetype installation task" 
+        if(Test-Path "\\$clustername\REMINST\setup.exe")
+        {
+            Copy-Item \\$clustername\REMINST\Patches\KB*.exe C:\HPCPatches -ErrorAction SilentlyContinue
+            break
+        }
+        elseif($retry -lt 30)
+        {
+            $retry++
+            Start-Sleep -Seconds 20
+        }
+        else
+        {
+            throw "\\$clustername\REMINST\setup.exe not available"
+        }
     }
     
-
-    try
+    # Install HPC compute node
+    TraceInfo "Installing HPC Pack compute node from \\$clustername\REMINST"
+    $pSetup = Start-Process -FilePath "\\$clustername\REMINST\setup.exe" -ArgumentList "-unattend -computenode:$clustername" -Wait -PassThru
+    if(($pSetup.ExitCode -ne 0) -and ($pSetup.ExitCode -ne 3010))
     {
-        $hpcSetupTask.Run($null) | Out-Null
-        TraceInfo  "HPC $nodetype installation task started"
-        TraceInfo "Waiting for HPC $nodetype installation ..."
-        Start-Sleep -Seconds 1
-        $retry = 0
-        while($true)
-        {
-            $taskState = $hpcSetupTask.State
-            # 2:Queued, 3:Ready, 4:Running
-            if($taskState -eq 3)
-            {
-                #If the task never run, the lastRunTime is December 30, 1899 12:00:00 AM
-                if($hpcSetupTask.LastRunTime -lt "1900-01-01")
-                {
-                    $hpcSetupTask.Run($null) | Out-Null
-                }
-                else
-                {
-                    if($hpcSetupTask.LastTaskResult -eq 0)
-                    {
-                        TraceInfo  "HPC $nodetype installation completed"
-                        break
-                    }
-                    else
-                    {
-                        # The setup task failed last time, re-run it
-                        if($retry -lt 3)
-                        {
-                            $hpcSetupTask.Run($null) | Out-Null
-                            $retry++
-                        }
-                        else
-                        {
-                            throw ("HPC $nodetype installation Failed: " + $hpcSetupTask.LastTaskResult)
-                        }
-                    }
-                }
-            }
-            elseif($taskState -eq 4)
-            {
-                # if the setup hangs, kill the process to make the task fail, and wait for retry
-                $p = Get-Process -Name "HpcSetupChainer" -ErrorAction SilentlyContinue
-                if($null -ne $p)
-                {
-                    $elapsedMins = ((Get-Date) - $p.StartTime).TotalMinutes
-                    if($elapsedMins -gt 20)
-                    {
-                        TraceInfo "HPC $nodetype installation hung, kill the HPC setup process."
-                        $p.Kill()  | Out-Null
-                    }
-                }
-            }
-            elseif($taskState -ne 2)
-            {
-                throw "The HPC $nodetype installation task entered into unexpected state: $taskState"
-            }
-
-            Start-Sleep -Seconds 2
-        }
+        throw "Failed to install compute node: $($pSetup.ExitCode)"
     }
-    catch
-    {
-        TraceInfo "HPC $nodetype installation Failed"
-        throw
-    }
-    finally
-    {
-        $Rootfolder.DeleteTask("hpcsetup",0)  | Out-Null
-    }
+    TraceInfo "Succeeded to install HPC Pack compute node."
 
     # Apply the patches if any
     $patchfiles = @(Get-ChildItem "C:\HPCPatches" -Filter "KB*.exe" | select -ExpandProperty FullName)
     if($patchfiles.Count -gt 0)
     {
+        # sleep for 10 seconds before applying QFEs
+        Start-Sleep -Seconds 10
         $patchTable = @{}
         foreach($pfile in $patchfiles)
         {
@@ -193,10 +126,28 @@ function InstallComputeNode
             Start-Sleep -Seconds 10
         }
     }
+
+    Remove-Item -Path "C:\HPCPatches" -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-Set-StrictMode -Version 3
-Import-Module ScheduledTasks
+try
+{
+    Set-StrictMode -Version 3
+}
+catch
+{
+}
+
+$postScriptConfigured = $false
+# Do not use IsNullOrWhiteSpace because it is not supported in DotNetFx3.5
+if(-not [String]::IsNullOrEmpty($PostConfigScript))
+{
+    $PostConfigScript = $PostConfigScript.Trim()
+    if(-not [String]::IsNullOrEmpty($PostConfigScript))
+    {
+        $postScriptConfigured = $true
+    }
+}
 
 $datetimestr = (Get-Date).ToString("yyyyMMddHHmmssfff")        
 $script:LogFile = "$env:windir\Temp\HpcPrepareCNLog-$datetimestr.txt"
@@ -206,6 +157,7 @@ $domainNetBios = $DomainFQDN.Split(".")[0].ToUpper()
 $domainUserCred = New-Object -TypeName System.Management.Automation.PSCredential `
         -ArgumentList @("$domainNetBios\$AdminUserName", (ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force))
 
+$taskName = "HpcPrepareComputeNode"
 # 0 for Standalone Workstation, 1 for Member Workstation, 2 for Standalone Server, 3 for Member Server, 4 for Backup Domain Controller, 5 for Primary Domain Controller
 $domainRole = (Get-WmiObject Win32_ComputerSystem).DomainRole
 TraceInfo "Domain role $domainRole"
@@ -228,24 +180,48 @@ if($domainRole -ne 3)
         }
     }
 
-    $task = Get-ScheduledTask -TaskName "HpcPrepareComputeNode" -ErrorAction SilentlyContinue
-    if($null -eq $task)
+    $hpcmgmt = Get-Service -Name HpcManagement -ErrorAction SilentlyContinue
+    if($hpcmgmt -ne $null -and (-not $postScriptConfigured))
     {
-        $CNPreparePsFile = "$PSScriptRoot\PrepareCN.ps1"
-        $taskArgs = "-DomainFQDN $DomainFQDN -ClusterName $ClusterName -AdminUserName $AdminUserName -AdminBase64Password $AdminBase64Password"
-        if(-not [String]::IsNullOrWhiteSpace($PostConfigScript))
-        {
-            $taskArgs += " -PostConfigScript '$PostConfigScript'"
-        }
-
-        $action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Unrestricted -Command `"& '$CNPreparePsFile' $taskArgs`""
-        $trigger = New-ScheduledTaskTrigger -AtStartup
-        TraceInfo "Register task HpcPrepareComputeNode"
-        Register-ScheduledTask -TaskName "HpcPrepareComputeNode" -Action $action -User 'NT AUTHORITY\SYSTEM' -Trigger $trigger -RunLevel Highest | Out-Null    
+        # If HPC Pack already installed, and no post script is configured, we just set the cluster name and reboot the computer.
+        # No need to schedule task
+        TraceInfo "HPC Pack already installed, start to set cluster name to $ClusterName"
+        Set-HpcClusterName.ps1 -ClusterName $ClusterName
+        TraceInfo "Finish to set cluster name"
     }
     else
     {
-        TraceInfo "Task HpcPrepareComputeNode is already existed"
+        # Because ScheduledTasks PowerShell module not available in Windows Server 2008 R2,
+        # We use ComObject Schedule.Service to schedule task
+        try
+        {
+            $schdService = new-object -ComObject "Schedule.Service"
+            $schdService.Connect("localhost") | Out-Null
+            $rootFolder = $schdService.GetFolder("\")
+            $task = $rootFolder.GetTasks(0) | ?{$_.Name -eq $taskName}
+            if($null -eq $task)
+            {
+                $taskDefinition = $schdService.NewTask(0)
+                $action = $taskDefinition.Actions.Create(0)
+                $action.Path = "PowerShell.exe"
+                $CNPreparePsFile = $MyInvocation.MyCommand.Definition
+                $taskArgs = "-DomainFQDN $DomainFQDN -ClusterName $ClusterName -AdminUserName $AdminUserName -AdminBase64Password $AdminBase64Password"
+                if($postScriptConfigured)
+                {
+                    $taskArgs += " -PostConfigScript '$PostConfigScript'"
+                }
+                $action.Arguments = "-ExecutionPolicy Unrestricted -Command `"& '$CNPreparePsFile' $taskArgs`""
+                # TASK_TRIGGER_BOOT = 8
+                $trigger = $taskDefinition.Triggers.Create(8)
+
+                $task = $rootFolder.RegisterTaskDefinition($taskName, $taskDefinition, 2, "system", $null, 5)
+                TraceInfo "Register task $taskName"
+            }
+        }
+        catch
+        {
+            throw "Failed to schedule task $taskName" 
+        }
     }
 
     TraceInfo "Restart after 30 seconds"
@@ -265,28 +241,32 @@ else
     else
     {
         TraceInfo "Start to install compute node"
-        InstallComputeNode $ClusterName "ComputeNode"
+        InstallComputeNode $ClusterName
         TraceInfo "Finish to install compute node"
     }
 
-    if(-not [String]::IsNullOrWhiteSpace($PostConfigScript))
+    if($postScriptConfigured)
     {
         $webclient = New-Object System.Net.WebClient
-        $ss = $PostConfigScript -split ' '
-        $fileWithPath = $ss[0]
-        $args = ""
-        if($ss.Count -gt 1)
+        $spaceIndex = $PostConfigScript.IndexOf(' ')
+        if($spaceIndex -lt 0)
         {
-            $args = $ss[1..$($ss.Count-1)] -join ' '
+            $scriptUrl = $PostConfigScript
+            $scriptArgs = ""
+        }
+        else
+        {
+            $scriptUrl = $PostConfigScript.Substring(0, $spaceIndex)
+            $scriptArgs = $PostConfigScript.Substring($spaceIndex+1)
         }
 
-        $fileName = $($fileWithPath -split '/')[-1]
-        $file = "$env:windir\Temp\$fileName"
-        TraceInfo "download post config script from $fileWithPath"
-        $webclient.DownloadFile($fileWithPath,$file)
-        $command = "$file $args"
-        TraceInfo "execute post config script $command"
-        Invoke-Expression -Command $command
+        $scriptName = $($scriptUrl -split '/')[-1]
+        $scriptFile = "$env:windir\Temp\$scriptName"
+        TraceInfo "download post config script from $scriptUrl"
+        $webclient.DownloadFile($scriptUrl, $scriptFile)
+        $scriptCommand = "$scriptFile $scriptArgs"
+        TraceInfo "execute post config script: $scriptCommand"
+        Invoke-Expression -Command $scriptCommand
         TraceInfo "finish to post config script"
     }
     else
@@ -294,5 +274,20 @@ else
         TraceInfo "PostConfigScript is empty, ignore it!"
     }
 
-    Unregister-ScheduledTask -TaskName "HpcPrepareComputeNode" -Confirm:$false
+    try
+    {
+        $schdService = new-object -ComObject "Schedule.Service"
+        $schdService.Connect("localhost") | Out-Null
+        $rootFolder = $schdService.GetFolder("\")
+        $task = $rootFolder.GetTasks(0) | ?{$_.Name -eq $taskName}
+        if($null -ne $task)
+        {
+            $rootFolder.DeleteTask($taskName,0)  | Out-Null
+            TraceInfo "Removed scheduled task $taskName"
+        }
+    }
+    catch
+    {
+        TraceInfo "Failed to remove scheduled task $taskName"
+    }
 }
