@@ -416,7 +416,7 @@
         },
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('computeNodeNamePrefix'), copyIndex(), '/', variables('installHPCNodeAgent'))]",
+            "name": "[concat(parameters('computeNodeNamePrefix'), copyIndex(), '/installHPCNodeAgent')]",
             "apiVersion": "2015-05-01-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [
