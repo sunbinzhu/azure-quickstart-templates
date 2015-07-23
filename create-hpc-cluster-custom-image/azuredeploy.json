@@ -135,7 +135,6 @@
         "publicIPAddressType": "Dynamic",
         "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-VM')]",
         "publicIPAddressNameHN": "[concat(variables('publicIPAddressName'),'-HN')]",
-        "dnsName": "[concat(parameters('clusterName'), 'ep')]",
         "nicName": "[concat(parameters('clusterName'),'-nic')]",
         "nicNameHN": "[concat(variables('nicName'),'-hn')]",
         "adminBase64Password": "[base64(parameters('adminPassword'))]",
@@ -338,7 +337,7 @@
                 },
                 "storageProfile": {
                     "osDisk": {
-                        "name": "[concat(parameters('computeNamePrefix'),copyindex())]",
+                        "name": "[concat(parameters('computeNodeNamePrefix'),copyindex())]",
                         "osType": "windows",
                         "caching": "ReadWrite",
                         "image": {
@@ -346,7 +345,7 @@
                         },
                         "createOption": "FromImage",
                         "vhd": {
-                            "uri": "[concat(parameters('computeNodeSourceImageContainer'), '/', parameters('computeNamePrefix'), copyindex(), '.vhd')]"
+                            "uri": "[concat(parameters('computeNodeSourceImageContainer'), '/', parameters('computeNodeNamePrefix'), copyindex(), '.vhd')]"
                         }
                     }
                 },
