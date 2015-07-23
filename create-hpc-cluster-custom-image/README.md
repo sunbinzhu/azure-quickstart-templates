@@ -1,5 +1,5 @@
 # Create HPC cluster with custom HPC compute node image
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fcreate-hpc-cluster-custom-image%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fsunbinzhu%2Fazure-quickstart-templates%2FInTest%2Fcreate-hpc-cluster-custom-image%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
 
@@ -17,7 +17,7 @@ Below are the parameters that the template expects.
 | computeNodeVMSize | Size of the compute node Virtual Machine |
 | adminUsername  | Username for the Virtual Machines  |
 | adminPassword  | Password for the Virtual Machines  |
-| computeNodeSourceImageVHDName  | The VHD name of the custom compute node image, for example, mycustomhpccn.vhd. The OS of the image must be Windows 2008 R2, Windows Server 2012 or Windows Server 2012 R2. It can be an image without HPC Pack installed, or an image captured from an HPC compute node.|
+| computeNodeSourceImageVHDName  | The VHD name of the custom compute node image, for example, mycustomhpccn.vhd. It can be an image without HPC Pack installed, or an image captured from an HPC compute node. The OS version of the image must be Windows 2008 R2, Windows Server 2012 or Windows Server 2012 R2. |
 | computeNodeSourceImageContainer  | The path of the container which contains user custom image, for example, 'https://myhpccnstorage.blob.core.windows.net/vhds'.|
 | headNodePostConfigScript  | Optional, specify the script url and command line if you want to run your custom script on the head node after it is configured. The script url must be public available, and you can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'. |
 | computeNodePostConfigScript  | Optional, specify the script url and command line if you want to run your custom script on the compute nodes after it is configured. The script url must be public available, and you can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'.  |
