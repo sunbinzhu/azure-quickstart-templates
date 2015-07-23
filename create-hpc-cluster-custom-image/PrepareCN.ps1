@@ -232,8 +232,6 @@ if($domainRole -ne 3)
 }
 else
 {   
-    $datetimestr = (Get-Date).ToString("yyyyMMddHHmmssfff")        
-    $script:LogFile = "$env:windir\Temp\HpcPrepareCNLog-$datetimestr.txt"
     $hpcmgmt = Get-Service -Name HpcManagement -ErrorAction SilentlyContinue
     if($hpcmgmt -ne $null)
     {
