@@ -175,6 +175,9 @@ if($domainRole -ne 3)
         }
         catch
         {
+            # Flush the DNS cache in case there is wrong cache for $DomainFQDN.
+            # Do not use Clear-DnsClientCache because it is not supported in Windows Server 2008 R2
+            Start-Process -FilePath ipconfig -ArgumentList "/flushdns" -Wait -NoNewWindow | Out-Null
             TraceInfo "Join domain failed, will try after 5 seconds, $_"
             Start-Sleep -Seconds 5
         }
