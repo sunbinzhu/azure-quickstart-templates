@@ -139,7 +139,7 @@
         "nicName": "[concat(parameters('clusterName'),'-nic')]",
         "nicNameHN": "[concat(variables('nicName'),'-hn')]",
         "adminBase64Password": "[base64(parameters('adminPassword'))]",
-        "customScriptLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster/",
+        "customScriptLocation": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/master/create-hpc-cluster/",
         "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', variables('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\"')]",
         "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -PostConfigScript \"', parameters('headNodePostConfigScript'), '\" ', variables('iaasInfoArg'))]",
         "storageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=')]",
@@ -377,7 +377,7 @@
                 "type": "CustomScriptExtension",
                 "typeHandlerVersion": "1.4",
                 "settings": {
-                    "fileUris": [ "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster-custom-image/PrepareCN.ps1" ],
+                    "fileUris": [ "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster-custom-image/PrepareCN.ps1" ],
                     "commandToExecute": "[variables('computeNodeCommandStr')]"
                 }
             }
