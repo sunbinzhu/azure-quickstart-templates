@@ -191,6 +191,7 @@ if($domainRole -ne 3)
         TraceInfo "HPC Pack already installed, start to set cluster name to $ClusterName"
         Set-HpcClusterName.ps1 -ClusterName $ClusterName
         TraceInfo "Finish to set cluster name"
+        TraceInfo "No PostConfigScript configured."
     }
     else
     {
@@ -248,7 +249,6 @@ else
 
     if($postScriptConfigured)
     {
-        $webclient = New-Object System.Net.WebClient
         $spaceIndex = $PostConfigScript.IndexOf(' ')
         if($spaceIndex -lt 0)
         {
@@ -263,16 +263,48 @@ else
 
         $scriptName = $($scriptUrl -split '/')[-1]
         $scriptFile = "$env:windir\Temp\$scriptName"
-        TraceInfo "download post config script from $scriptUrl"
-        $webclient.DownloadFile($scriptUrl, $scriptFile)
-        $scriptCommand = "$scriptFile $scriptArgs"
-        TraceInfo "execute post config script: $scriptCommand"
-        Invoke-Expression -Command $scriptCommand
-        TraceInfo "finish to post config script"
+        $downloader = New-Object System.Net.WebClient
+        $scriptDownloaded = $false
+        $attempt = 1
+        while($true)
+        {
+            try
+            {
+                TraceInfo "Downloading post config script from $scriptUrl (Attempt #$attempt)"
+                $downloader.DownloadFile($scriptUrl, $scriptFile) | Out-Null
+                TraceInfo "Downloaded post config script from $scriptUrl"
+                $scriptDownloaded = $true
+                break
+            }
+            catch
+            {
+                TraceInfo "Failed to download $scriptName : $_"
+                if($attempt -lt 10)
+                {
+                    # Flush the DNS cache in case there is wrong cache for $DomainFQDN.
+                    # Do not use Clear-DnsClientCache because it is not supported in Windows Server 2008 R2
+                    Start-Process -FilePath ipconfig -ArgumentList "/flushdns" -Wait -NoNewWindow | Out-Null
+                    Start-Sleep -Seconds 20
+                    $attempt++
+                }
+                else
+                {
+                    break
+                }
+            }
+        }
+
+        if($scriptDownloaded)
+        {
+            $scriptCommand = "$scriptFile $scriptArgs"
+            TraceInfo "Start to run post config script: $scriptCommand"
+            Invoke-Expression -Command $scriptCommand
+            TraceInfo "Finished post config script"
+        }
     }
     else
     {
-        TraceInfo "PostConfigScript is empty, ignore it!"
+        TraceInfo "No PostConfigScript configured."
     }
 
     try
