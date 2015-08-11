@@ -42,13 +42,13 @@
             "type": "string",
             "defaultValue": "CentOS_7.0",
             "allowedValues": [
-                "Ubuntu_14.10",
                 "CentOS_6.6",
                 "CentOS_7.0",
                 "SLES_12",
                 "SLES_Premium_12",
                 "SLES_HPC_12",
-                "SLES_HPC_Premium_12"
+                "SLES_HPC_Premium_12",
+                "Ubuntu_14.04"
             ],
             "metadata": {
                 "description": "The Linux distro of the compute nodes"
@@ -131,35 +131,36 @@
         "publicIPAddressType": "Dynamic",
         "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-VM')]",
         "publicIPAddressNameHN": "[concat(variables('publicIPAddressName'),'-HN')]",
+        "availabilitySetName": "[concat(parameters('clusterName'), 'AVSet')]",
         "dnsName": "[concat(parameters('clusterName'), 'ep')]",
         "nicName": "[concat(parameters('clusterName'),'-nic')]",
         "nicNameHN": "[concat(variables('nicName'),'-hn')]",
         "linuxImagePublishers": {
-            "Ubuntu_14.10": "Canonical",
             "CentOS_6.6": "OpenLogic",
             "CentOS_7.0": "OpenLogic",
             "SLES_12": "SUSE",
             "SLES_Premium_12": "SUSE",
             "SLES_HPC_12": "SUSE",
-            "SLES_HPC_Premium_12": "SUSE"
+            "SLES_HPC_Premium_12": "SUSE",
+            "Ubuntu_14.04": "Canonical"
         },
         "linuxImageOffers": {
-            "Ubuntu_14.10": "UbuntuServer",
             "CentOS_6.6": "CentOS",
             "CentOS_7.0": "CentOS",
             "SLES_12": "SLES",
             "SLES_Premium_12": "SLES-Priority",
             "SLES_HPC_12": "SLES-HPC",
-            "SLES_HPC_Premium_12": "SLES-HPC-Priority"
+            "SLES_HPC_Premium_12": "SLES-HPC-Priority",
+            "Ubuntu_14.04": "UbuntuServer"
         },
         "linuxImageSkus": {
-            "Ubuntu_14.10": "14.10",
             "CentOS_6.6": "6.6",
             "CentOS_7.0": "7.0",
             "SLES_12": "12",
             "SLES_Premium_12": "12",
             "SLES_HPC_12": "12",
-            "SLES_HPC_Premium_12": "12"
+            "SLES_HPC_Premium_12": "12",
+            "Ubuntu_14.04": "14.04.3-LTS"
         },
         "computeNodeImagePublisher": "[variables('linuxImagePublishers')[parameters('computeNodeImage')]]",
         "computeNodeImageOffer": "[variables('linuxImageOffers')[parameters('computeNodeImage')]]",
@@ -181,6 +182,13 @@
             "properties": {
                 "accountType": "Standard_LRS"
             }
+        },
+
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[variables('availabilitySetName')]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]"
         },
 
         {
@@ -253,10 +261,14 @@
             "name": "[parameters('clusterName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]",
                 "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
             ],
             "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+                },
                 "hardwareProfile": {
                     "vmSize": "[parameters('headNodeVMSize')]"
                 },
@@ -345,6 +357,7 @@
             "name": "[concat(parameters('computeNodeNamePrefix'), copyIndex())]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
+                "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'), '/extensions/configureHeadNode')]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyIndex())]"
@@ -354,6 +367,9 @@
                 "count": "[parameters('computeNodeNumber')]"
             },
             "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', variables('availabilitySetName'))]"
+                },
                 "hardwareProfile": {
                     "vmSize": "[parameters('computeNodeVMSize')]"
                 },
