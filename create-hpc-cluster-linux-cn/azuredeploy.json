@@ -166,7 +166,7 @@
         "computeNodeImageOffer": "[variables('linuxImageOffers')[parameters('computeNodeImage')]]",
         "computeNodeImageSku": "[variables('linuxImageSkus')[parameters('computeNodeImage')]]",
         "adminBase64Password": "[base64(parameters('adminPassword'))]",
-        "customScriptLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster/",
+        "customScriptLocation": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster/",
         "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', variables('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\"')]",
         "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -PostConfigScript \"', parameters('headNodePostConfigScript'), '\" -UnsecureDNSUpdate ', variables('iaasInfoArg'))]",
         "storageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=')]",
@@ -201,9 +201,6 @@
                     "addressPrefixes": [
                         "[variables('addressPrefix')]"
                     ]
-                },
-                "dhcpOptions": {
-                    "dnsServers": [ "10.0.0.4", "8.8.8.8" ]
                 },
                 "subnets": [
                     {
@@ -291,7 +288,19 @@
                         },
                         "caching": "ReadOnly",
                         "createOption": "FromImage"
-                    }
+                    },
+                    "dataDisks": [
+                        {
+                            "name": "datadisk",
+                            "vhd": {
+                                "Uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/headnode/','datadisk.vhd')]"
+                            },
+                            "caching": "None",
+                            "createOption": "Empty",
+                            "diskSizeGB": "200",
+                            "lun": 0
+                        }
+                    ]
                 },
 
                 "networkProfile": {
@@ -301,15 +310,84 @@
                         }
                     ]
                 }
+            },
+            "resources": [
+                {
+                    "type": "Microsoft.Compute/virtualMachines/extensions",
+                    "name": "[concat(parameters('clusterName'),'/InstallDomainController')]",
+                    "apiVersion": "2015-05-01-preview",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'))]"
+                    ],
+                    "properties": {
+                        "publisher": "Microsoft.Powershell",
+                        "type": "DSC",
+                        "typeHandlerVersion": "2.1",
+                        "settings": {
+                            "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.ps1.zip')]",
+                            "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+                            "Properties": {
+                                "DomainName": "[parameters('privateDomainName')]",
+                                "AdminCreds": {
+                                    "UserName": "[parameters('adminUsername')]",
+                                    "Password": "PrivateSettingsRef:AdminPassword"
+                                }
+                            }
+                        },
+                        "protectedSettings": {
+                            "Items": {
+                                "AdminPassword": "[parameters('adminPassword')]"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+
+        {
+            "apiVersion": "2015-01-01",
+            "type": "Microsoft.Resources/deployments",
+            "name": "updatevnetdns",
+            "dependsOn": [
+                "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'),'/extensions/InstallDomainController')]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('customScriptLocation'),'vnet-with-dns-server.json')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "virtualNetworkName": {
+                        "value": "[variables('virtualNetworkName')]"
+                    },
+                    "virtualNetworkAddressRange": {
+                        "value": "[variables('addressPrefix')]"
+                    },
+                    "subnetName": {
+                        "value": "[variables('subnet1Name')]"
+                    },
+                    "subnetRange": {
+                        "value": "[variables('subnet1Prefix')]"
+                    },
+                    "DNSServerAddress": {
+                        "value": [
+                            "10.0.0.4",
+                            "8.8.8.8"
+                        ]
+                    }
+                }
             }
         },
+
         {
             "type": "Microsoft.Compute/virtualMachines/extensions",
             "name": "[concat(parameters('clusterName'),'/configureHeadNode')]",
             "apiVersion": "2015-05-01-preview",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'))]"
+                "Microsoft.Resources/deployments/updatevnetdns"
             ],
             "properties": {
                 "publisher": "Microsoft.Compute",
@@ -331,7 +409,8 @@
             "name": "[concat(variables('nicName'), copyIndex())]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]"
+                "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]",
+                "Microsoft.Resources/deployments/updatevnetdns"
             ],
             "copy": {
                 "name": "CN",
@@ -359,7 +438,6 @@
             "dependsOn": [
                 "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetName'))]",
                 "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'))]",
-                "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'), '/extensions/configureHeadNode')]",
                 "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyIndex())]"
             ],
             "copy": {
@@ -377,9 +455,22 @@
                     "computername": "[concat(parameters('computeNodeNamePrefix'), copyIndex())]",
                     "adminUsername": "[parameters('adminUsername')]",
                     "adminPassword": "[parameters('adminPassword')]",
+                    "customData": "[base64(concat('HPCClusterName=', parameters('clusterName')))]",
                     "linuxConfiguration": {
                         "disablePasswordAuthentication": "false"
-                    }
+                    },
+                    "secrets": [
+                        {
+                            "sourceVault": {
+                                "id": "/subscriptions/a486e243-747b-42de-8c4c-379f8295a746/resourceGroups/SuzhuVaultRG/providers/Microsoft.KeyVault/vaults/SuzhuTestKeyVault"
+                            },
+                            "vaultCertificates": [
+                                {
+                                    "certificateUrl": "https://suzhutestkeyvault.vault.azure.net/secrets/SuzhuTestSecret/0d4b1c1c6890438abcca52a4ac93d45f"
+                                }
+                            ]
+                        }
+                    ]
                 },
                 "storageProfile": {
                     "imageReference": {
@@ -424,7 +515,7 @@
                 "typeHandlerVersion": "1.3",
                 "settings": {
                     "fileUris": [
-                        "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster-linux-cn/updatednsrecord.sh"
+                        "[concat(variables('customScriptLocation'), 'updatednsrecord.sh')]"
                     ],
                     "commandToExecute": "[concat('bash updatednsrecord.sh ', parameters('privateDomainName'), ' ', reference(concat(variables('nicName'), copyIndex())).ipConfigurations[0].properties.privateIPAddress)]"
                 }
