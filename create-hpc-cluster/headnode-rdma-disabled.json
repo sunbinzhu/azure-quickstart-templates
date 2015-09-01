@@ -86,7 +86,7 @@
             {
               "name": "datadisk",
               "vhd": {
-                "Uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-datadisk.vhd')]"
+                "Uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-datadisk.vhd')]"
               },
               "caching": "None",
               "createOption": "Empty",
