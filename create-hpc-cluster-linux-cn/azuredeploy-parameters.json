@@ -3,6 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "clusterName": {
+<<<<<<< HEAD
         "value": "myhpccluster01"
     },
     "privateDomainName": {
@@ -28,6 +29,33 @@
     },
     "adminPassword": {
         "value": "Pa$$word123"
+=======
+      "value": "myhpccluster01"
+    },
+    "privateDomainName": {
+      "value": "hpc.local"    
+    },
+    "headNodeVMSize": {
+      "value": "Standard_A4"
+    },
+    "computeNodeImage": {
+      "value": "CentOS_7.0",
+    },
+    "computeNodeNamePrefix": {
+      "value": "IaaSLnxCN-",
+    }, 
+    "computeNodeNumber": {
+      "value": 2
+    },
+    "computeNodeVMSize": {
+      "value": "Standard_A3"
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "adminPassword": {
+      "value": "Pa$$word123"
+>>>>>>> master
     }
   }    
 }
