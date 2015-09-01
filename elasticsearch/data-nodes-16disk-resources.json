@@ -74,7 +74,7 @@
     "availabilitySet": {
       "type": "string",
       "metadata": {
-        "description": "The availabilty set to use for the data nodes"
+        "description": "The availability set to use for the data nodes"
       }
     },
     "lbBackendPools": {
@@ -349,7 +349,7 @@
         "typeHandlerVersion": "1.2",
         "settings": {
           "fileUris": "[parameters('osSettings').scripts]",
-          "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -yn ', parameters('esSettings').clusterName, ' -v ', parameters('esSettings').version, ' -d ', parameters('esSettings').discoveryHosts)]"
+          "commandToExecute": "[concat('bash elasticsearch-ubuntu-install.sh -zn ', parameters('esSettings').clusterName, ' -v ', parameters('esSettings').version, ' -d ', parameters('esSettings').discoveryHosts)]"
         }
       }
     }
