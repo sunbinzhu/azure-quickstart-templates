@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "apiVersion": { 
+    "apiVersion": {
       "type": "string",
       "metadata": {
         "description": "The API version"
@@ -48,7 +48,7 @@
       "type": "string",
       "metadata": {
         "description": "The availability set name"
-      }    
+      }
     }
   },
 
@@ -84,7 +84,19 @@
             },
             "caching": "ReadOnly",
             "createOption": "FromImage"
-          }
+          },
+          "dataDisks": [
+            {
+              "name": "datadisk",
+              "vhd": {
+                "Uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-datadisk.vhd')]"
+              },
+              "caching": "None",
+              "createOption": "Empty",
+              "diskSizeGB": "200",
+              "lun": 0
+            }
+          ]
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -95,6 +107,7 @@
         }
       }
     },
+
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('vmName'),'/installRDMADriver')]",

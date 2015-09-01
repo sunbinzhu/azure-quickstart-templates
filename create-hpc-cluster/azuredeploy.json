@@ -164,7 +164,7 @@
     },
     "computeNodeImageSku": "[variables('availableCNImageSkus')[parameters('computeNodeImage')]]",
     "adminBase64Password": "[base64(parameters('adminPassword'))]",
-    "customScriptLocation": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster/",
+    "customScriptLocation": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster/",
     "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', variables('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\"')]",
     "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -PostConfigScript \"', parameters('headNodePostConfigScript'), '\" ', variables('iaasInfoArg'))]",
     "storageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=')]",
@@ -189,12 +189,6 @@
         "addressSpace": {
           "addressPrefixes": [
             "[variables('addressPrefix')]"
-          ]
-        },
-        "dhcpOptions": {
-          "dnsServers": [
-            "10.0.0.4",
-            "8.8.8.8"
           ]
         },
         "subnets": [
@@ -313,11 +307,78 @@
 
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('clusterName'),'/configureHeadNode')]",
+      "name": "[concat(parameters('clusterName'),'/promoteDomainController')]",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "Microsoft.Resources/deployments/createHeadNode"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Powershell",
+        "type": "DSC",
+        "typeHandlerVersion": "2.1",
+        "settings": {
+          "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.ps1.zip')]",
+          "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
+          "Properties": {
+            "DomainName": "[parameters('privateDomainName')]",
+            "AdminCreds": {
+              "UserName": "[parameters('adminUsername')]",
+              "Password": "PrivateSettingsRef:AdminPassword"
+            }
+          }
+        },
+        "protectedSettings": {
+          "Items": {
+            "AdminPassword": "[parameters('adminPassword')]"
+          }
+        }
+      }
+    },
+
+    {
+      "apiVersion": "2015-01-01",
+      "type": "Microsoft.Resources/deployments",
+      "name": "updateVNetDNS",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'),'/extensions/promoteDomainController')]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('customScriptLocation'),'vnet-with-dns-server.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "virtualNetworkName": {
+            "value": "[variables('virtualNetworkName')]"
+          },
+          "virtualNetworkAddressRange": {
+            "value": "[variables('addressPrefix')]"
+          },
+          "subnetName": {
+            "value": "[variables('subnet1Name')]"
+          },
+          "subnetRange": {
+            "value": "[variables('subnet1Prefix')]"
+          },
+          "DNSServerAddress": {
+            "value": [
+              "10.0.0.4",
+              "8.8.8.8"
+            ]
+          }
+        }
+      }
+    },
+
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('clusterName'),'/configureHeadNode')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/updateVNetDNS"
       ],
       "properties": {
         "publisher": "Microsoft.Compute",
@@ -339,6 +400,9 @@
       "name": "[concat(variables('cnStorageAccountPrefix'), copyIndex())]",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/updateVNetDNS"
+      ],
       "copy": {
         "name": "CNStorageAccounts",
         "count": "[variables('cnStorageAccountNumber')]"
@@ -354,7 +418,8 @@
       "name": "[concat(variables('nicName'), copyIndex())]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]"
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]",
+        "Microsoft.Resources/deployments/updateVNetDNS"
       ],
       "copy": {
         "name": "CN",
