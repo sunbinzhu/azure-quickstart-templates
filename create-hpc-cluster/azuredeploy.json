@@ -316,7 +316,7 @@
       "properties": {
         "publisher": "Microsoft.Powershell",
         "type": "DSC",
-        "typeHandlerVersion": "2.1",
+        "typeHandlerVersion": "2.3",
         "settings": {
           "ModulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.ps1.zip')]",
           "ConfigurationFunction": "CreateADPDC.ps1\\CreateADPDC",
