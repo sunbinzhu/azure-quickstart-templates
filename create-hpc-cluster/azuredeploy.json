@@ -399,7 +399,7 @@
       "sku": {
         "name": "[parameters('computeNodeVMSize')]",
         "tier": "Standard",
-        "capacity": "[parameters('instanceCount')]"
+        "capacity": "[parameters('computeNodeNumber')]"
       },
       "properties": {
         "upgradePolicy": {
