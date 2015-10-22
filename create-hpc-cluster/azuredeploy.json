@@ -121,6 +121,7 @@
     ],
     "apiVersion": "2015-06-15",
     "storageAccountName": "[toLower(concat(parameters('clusterName'), 'sa'))]",
+    "vmSSName": "[concat(parameters('clusterName'), 'ss')]",
     "cnStorageAccountSuffix": "[concat(variables('storageAccountName'), 'cn')]",
     "cnStorageAccountNumber": "[add(div(parameters('computeNodeNumber'), 10), 1)]",
     "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName'))]",
@@ -385,7 +386,7 @@
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "apiVersion": "2015-06-15",
-      "name": "[parameters('vmSSName')]",
+      "name": "[variables('vmSSName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "Microsoft.Resources/deployments/createAvailabilitySet",
