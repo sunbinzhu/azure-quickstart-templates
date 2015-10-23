@@ -112,9 +112,17 @@
     }
   },
   "variables": {
-    "apiVersion": "2015-05-01-preview",
+    "storageAccountPrefix": [
+      "a",
+      "g",
+      "m",
+      "s",
+      "y"
+    ],
+    "apiVersion": "2015-06-15",
     "storageAccountName": "[toLower(concat(parameters('clusterName'), 'sa'))]",
-    "cnStorageAccountPrefix": "[concat(variables('storageAccountName'), 'cn')]",
+    "vmSSName": "[concat(parameters('clusterName'), 'ss')]",
+    "cnStorageAccountSuffix": "[concat(variables('storageAccountName'), 'cn')]",
     "cnStorageAccountNumber": "[add(div(parameters('computeNodeNumber'), 10), 1)]",
     "storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName'))]",
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
@@ -398,7 +406,7 @@
 
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[concat(variables('cnStorageAccountPrefix'), copyIndex())]",
+      "name": "[concat(variables('storageAccountPrefix')[copyIndex()], variables('cnStorageAccountSuffix'))]",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
@@ -406,7 +414,7 @@
       ],
       "copy": {
         "name": "CNStorageAccounts",
-        "count": "[variables('cnStorageAccountNumber')]"
+        "count": 5
       },
       "properties": {
         "accountType": "Standard_LRS"
@@ -415,117 +423,93 @@
 
     {
       "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('nicName'), copyIndex())]",
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "name": "[variables('vmSSName')]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]",
-        "Microsoft.Resources/deployments/updateVNetDNS"
-      ],
-      "copy": {
-        "name": "CN",
-        "count": "[parameters('computeNodeNumber')]"
-      },
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "IPConfig",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-
-    {
-      "apiVersion": "2015-01-01",
-      "type": "Microsoft.Resources/deployments",
-      "name": "[concat('create', parameters('computeNodeNamePrefix'), copyIndex())]",
       "dependsOn": [
         "Microsoft.Resources/deployments/createAvailabilitySet",
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'), copyIndex())]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('cnStorageAccountPrefix'), div(copyIndex(), 10))]"
+        "[concat('Microsoft.Storage/storageAccounts/a', variables('cnStorageAccountSuffix'))]",
+        "[concat('Microsoft.Storage/storageAccounts/g', variables('cnStorageAccountSuffix'))]",
+        "[concat('Microsoft.Storage/storageAccounts/m', variables('cnStorageAccountSuffix'))]",
+        "[concat('Microsoft.Storage/storageAccounts/s', variables('cnStorageAccountSuffix'))]",
+        "[concat('Microsoft.Storage/storageAccounts/y', variables('cnStorageAccountSuffix'))]"
       ],
-      "copy": {
-        "name": "CN",
-        "count": "[parameters('computeNodeNumber')]"
+      "sku": {
+        "name": "[parameters('computeNodeVMSize')]",
+        "tier": "Standard",
+        "capacity": "[parameters('computeNodeNumber')]"
       },
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[concat(variables('customScriptLocation'), 'windowsnode-rdma-', variables('vmSizeRDMAStates')[parameters('computeNodeVMSize')], '.json')]",
-          "contentVersion": "1.0.0.0"
+        "upgradePolicy": {
+          "mode": "Manual"
         },
-        "parameters": {
-          "apiVersion": {
-            "value": "[variables('apiVersion')]"
-          },
-          "vmName": {
-            "value": "[concat(parameters('computeNodeNamePrefix'), copyIndex())]"
-          },
-          "vmSize": {
-            "value": "[parameters('computeNodeVMSize')]"
-          },
-          "storageAccountName": {
-            "value": "[concat(variables('cnStorageAccountPrefix'), div(copyIndex(), 10))]"
-          },
-          "imgPublisher": {
-            "value": "MicrosoftWindowsServerHPCPack"
-          },
-          "imgOffer": {
-            "value": "WindowsServerHPCPack"
-          },
-          "imgSku": {
-            "value": "[variables('computeNodeImageSku')]"
-          },
-          "imgVersion": {
-            "value": "latest"
-          },
-          "nicName": {
-            "value": "[concat(variables('nicName'), copyIndex())]"
-          },
-          "adminUsername": {
-            "value": "[parameters('adminUsername')]"
-          },
-          "adminPassword": {
-            "value": "[parameters('adminPassword')]"
-          },
-          "availabilitySetName": {
-            "value": "[variables('availabilitySetName')]"
-          },
-          "customData": { 
-            "value": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=WindowsServerHPCPack-', variables('computeNodeImageSku'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
-          }
-        }
-      }
-    },
 
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('computeNodeNamePrefix'), copyIndex(), '/configureComputeNode')]",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'), '/extensions/configureHeadNode')]",
-        "[concat('Microsoft.Resources/deployments/create', parameters('computeNodeNamePrefix'), copyIndex())]"
-      ],
-      "copy": {
-        "name": "CN",
-        "count": "[parameters('computeNodeNumber')]"
-      },
-      "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.4",
-        "settings": {
-          "fileUris": [
-            "[concat(variables('customScriptLocation'), 'PrepareCN.ps1')]"
-          ],
-          "commandToExecute": "[variables('computeNodeCommandStr')]"
+        "virtualMachineProfile": {
+          "storageProfile": {
+            "osDisk": {
+              "vhdContainers": [
+                "[concat('https://a', variables('cnStorageAccountSuffix'), '.blob.core.windows.net/vmss')]",
+                "[concat('https://g', variables('cnStorageAccountSuffix'), '.blob.core.windows.net/vmss')]",
+                "[concat('https://m', variables('cnStorageAccountSuffix'), '.blob.core.windows.net/vmss')]",
+                "[concat('https://s', variables('cnStorageAccountSuffix'), '.blob.core.windows.net/vmss')]",
+                "[concat('https://y', variables('cnStorageAccountSuffix'), '.blob.core.windows.net/vmss')]"
+              ],
+              "name": "vmssosdisk",
+              "caching": "ReadOnly",
+              "createOption": "FromImage"
+            },
+            "imageReference": {
+              "publisher": "MicrosoftWindowsServerHPCPack",
+              "offer": "WindowsServerHPCPack",
+              "sku": "[variables('computeNodeImageSku')]",
+              "version": "latest"
+            }
+          },
+          "osProfile": {
+            "computerNamePrefix": "[parameters('computeNodeNamePrefix')]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "adminPassword": "[parameters('adminPassword')]",
+            "customData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=WindowsServerHPCPack-', variables('computeNodeImageSku'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "nic1",
+                "properties": {
+                  "primary": "true",
+                  "ipConfigurations": [
+                    {
+                      "name": "ip1",
+                      "properties": {
+                        "privateIPAllocationMethod": "Dynamic",
+                        "subnet": {
+                          "id": "[variables('subnetRef')]"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "configureComputeNode",
+                "properties": {
+                  "publisher": "Microsoft.Compute",
+                  "type": "CustomScriptExtension",
+                  "typeHandlerVersion": "1.4",
+                  "settings": {
+                    "fileUris": [
+                      "[concat(variables('customScriptLocation'), 'PrepareCN.ps1')]"
+                    ],
+                    "commandToExecute": "[variables('computeNodeCommandStr')]"
+                  }
+                }
+              }
+            ]
+          }
         }
       }
     }
