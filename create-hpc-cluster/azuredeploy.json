@@ -357,33 +357,6 @@
     },
 
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(variables('nicName'), copyIndex())]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]"
-      ],
-      "copy": {
-        "name": "CN",
-        "count": "[parameters('computeNodeNumber')]"
-      },
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "IPConfig",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[variables('subnetRef')]"
-              }
-            }
-          }
-        ]
-      }
-    },
-
-    {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "apiVersion": "2015-06-15",
       "name": "[variables('vmSSName')]",
@@ -430,7 +403,8 @@
           "osProfile": {
             "computerNamePrefix": "[parameters('computeNodeNamePrefix')]",
             "adminUsername": "[parameters('adminUsername')]",
-            "adminPassword": "[parameters('adminPassword')]"
+            "adminPassword": "[parameters('adminPassword')]",
+            "customData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=WindowsServerHPCPack-', variables('computeNodeImageSku'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
           },
           "networkProfile": {
             "networkInterfaceConfigurations": [
