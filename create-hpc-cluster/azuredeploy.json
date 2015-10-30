@@ -305,7 +305,7 @@
             "value": "[variables('customScriptLocation')]"
           },
           "privateDomainName": {
-            "value": "[parameters('adminPassword')]"
+            "value": "[parameters('privateDomainName')]"
           }
         }
       }
