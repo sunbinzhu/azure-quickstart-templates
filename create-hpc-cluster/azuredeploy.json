@@ -300,38 +300,12 @@
           },
           "availabilitySetName": {
             "value": "[variables('availabilitySetName')]"
-          }
-        }
-      }
-    },
-
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('clusterName'),'/promoteDomainController')]",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "Microsoft.Resources/deployments/createHeadNode"
-      ],
-      "properties": {
-        "publisher": "Microsoft.Powershell",
-        "type": "DSC",
-        "typeHandlerVersion": "2.7",
-        "settings": {
-          "modulesUrl": "[concat(variables('customScriptLocation'),'CreateADPDC.ps1.zip')]",
-          "configurationFunction": "CreateADPDC.ps1\\CreateADPDC",
-          "wmfVersion": "4.0",
-          "Properties": {
-            "DomainName": "[parameters('privateDomainName')]",
-            "AdminCreds": {
-              "UserName": "[parameters('adminUsername')]",
-              "Password": "PrivateSettingsRef:AdminPassword"
-            }
-          }
-        },
-        "protectedSettings": {
-          "Items": {
-            "AdminPassword": "[parameters('adminPassword')]"
+          },
+          "scriptBaseUri": {
+            "value": "[variables('customScriptLocation')]"
+          },
+          "privateDomainName": {
+            "value": "[parameters('adminPassword')]"
           }
         }
       }
@@ -342,7 +316,7 @@
       "type": "Microsoft.Resources/deployments",
       "name": "updateVNetDNS",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'),'/extensions/promoteDomainController')]"
+        "Microsoft.Resources/deployments/createHeadNode"
       ],
       "properties": {
         "mode": "Incremental",
@@ -497,35 +471,15 @@
           "availabilitySetName": {
             "value": "[variables('availabilitySetName')]"
           },
-          "customData": { 
+          "customData": {
             "value": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=WindowsServerHPCPack-', variables('computeNodeImageSku'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
+          },
+          "scriptBaseUri": {
+            "value": "[variables('customScriptLocation')]"
+          },
+          "computeNodeCommandStr": { 
+            "value": "[variables('computeNodeCommandStr')]"
           }
-        }
-      }
-    },
-
-    {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('computeNodeNamePrefix'), copyIndex(), '/configureComputeNode')]",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('clusterName'), '/extensions/configureHeadNode')]",
-        "[concat('Microsoft.Resources/deployments/create', parameters('computeNodeNamePrefix'), copyIndex())]"
-      ],
-      "copy": {
-        "name": "CN",
-        "count": "[parameters('computeNodeNumber')]"
-      },
-      "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.4",
-        "settings": {
-          "fileUris": [
-            "[concat(variables('customScriptLocation'), 'PrepareCN.ps1')]"
-          ],
-          "commandToExecute": "[variables('computeNodeCommandStr')]"
         }
       }
     }
