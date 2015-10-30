@@ -79,6 +79,18 @@
       "metadata": {
         "description": "The custom data in base64 format"
       }
+    },
+    "scriptBaseUri": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI of the script"
+      }
+    },
+    "computeNodeCommandStr": {
+      "type": "string",
+      "metadata": {
+        "description": "The command line to configure the compute node"
+      }
     }
   },
 
@@ -120,32 +132,30 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
             }
           ]
-        },
-        "resources": [
-          {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-          {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('vmName'), '/configureComputeNode')]",
-            "apiVersion": "[parameters('apiVersion')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-            ],
-            "properties": {
-              "publisher": "Microsoft.Compute",
-              "type": "CustomScriptExtension",
-              "typeHandlerVersion": "1.4",
-              "settings": {
-                "fileUris": [
-                  "[concat(parameters('scriptBaseUri'), 'PrepareCN.ps1')]"
-                ],
-                "commandToExecute": "[parameters('computeNodeCommandStr')]"
-              }
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(parameters('vmName'), '/configureComputeNode')]",
+          "apiVersion": "[parameters('apiVersion')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('scriptBaseUri'), 'PrepareCN.ps1')]"
+              ],
+              "commandToExecute": "[parameters('computeNodeCommandStr')]"
             }
           }
-        ]
-      }
+        }
+      ]
     }
   ]
 }

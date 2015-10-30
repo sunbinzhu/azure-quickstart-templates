@@ -86,7 +86,7 @@
         "description": "The base URI of the script"
       }
     },
-    "computeNodeCommandStr": { 
+    "computeNodeCommandStr": {
       "type": "string",
       "metadata": {
         "description": "The command line to configure the compute node"
@@ -135,45 +135,45 @@
               "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('nicName'))]"
             }
           ]
+        }
+      },
+      "resources": [
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(parameters('vmName'), '/installRDMADriver')]",
+          "apiVersion": "[parameters('apiVersion')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.HpcCompute",
+            "type": "HpcVmDrivers",
+            "typeHandlerVersion": "1.1"
+          }
         },
-        "resources": [
-          {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('vmName'), '/installRDMADriver')]",
-            "apiVersion": "[parameters('apiVersion')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
-            ],
-            "properties": {
-              "publisher": "Microsoft.HpcCompute",
-              "type": "HpcVmDrivers",
-              "typeHandlerVersion": "1.1"
-            }
-          },
-          {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "name": "[concat(parameters('vmName'), '/configureComputeNode')]",
-            "apiVersion": "[parameters('apiVersion')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]",
-              "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'), '/extensions/installRDMADriver')]"
-            ],
-            "properties": {
-              "publisher": "Microsoft.Compute",
-              "type": "CustomScriptExtension",
-              "typeHandlerVersion": "1.4",
-              "settings": {
-                "fileUris": [
-                  "[concat(parameters('scriptBaseUri'), 'PrepareCN.ps1')]"
-                ],
-                "commandToExecute": "[parameters('computeNodeCommandStr')]"
-              }
+        {
+          "type": "Microsoft.Compute/virtualMachines/extensions",
+          "name": "[concat(parameters('vmName'), '/configureComputeNode')]",
+          "apiVersion": "[parameters('apiVersion')]",
+          "location": "[resourceGroup().location]",
+          "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]",
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'), '/extensions/installRDMADriver')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('scriptBaseUri'), 'PrepareCN.ps1')]"
+              ],
+              "commandToExecute": "[parameters('computeNodeCommandStr')]"
             }
           }
-        ]
-      }
+        }
+      ]
     }
   ]
 }
