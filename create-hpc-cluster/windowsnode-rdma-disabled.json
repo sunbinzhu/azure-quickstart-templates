@@ -68,12 +68,6 @@
         "description": "The version of the VM image"
       }
     },
-    "nicName": {
-      "type": "string",
-      "metadata": {
-        "description": "The network interface name"
-      }
-    },
     "adminUsername": {
       "type": "string",
       "metadata": {

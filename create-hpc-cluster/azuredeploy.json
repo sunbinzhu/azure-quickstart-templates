@@ -440,9 +440,6 @@
           "imgVersion": {
             "value": "latest"
           },
-          "nicName": {
-            "value": "[concat(variables('nicName'), copyIndex())]"
-          },
           "adminUsername": {
             "value": "[parameters('adminUsername')]"
           },
