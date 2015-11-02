@@ -98,10 +98,10 @@
         "description": "The base URI of the script"
       }
     },
-    "computeNodeCommandStr": {
+    "privateDomainName": {
       "type": "string",
       "metadata": {
-        "description": "The command line to configure the compute node"
+        "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
     }
   },
@@ -179,14 +179,25 @@
             "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
           ],
           "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.4",
+            "publisher": "Microsoft.Powershell",
+            "type": "DSC",
+            "typeHandlerVersion": "2.7",
             "settings": {
-              "fileUris": [
-                "[concat(parameters('scriptBaseUri'), 'PrepareCN.ps1')]"
-              ],
-              "commandToExecute": "[parameters('computeNodeCommandStr')]"
+              "modulesUrl": "[concat(parameters('scriptBaseUri'),'ConfigComputeNode.ps1.zip')]",
+              "configurationFunction": "ConfigComputeNode.ps1\\ConfigComputeNode",
+              "wmfVersion": "4.0",
+              "Properties": {
+                "DomainName": "[parameters('privateDomainName')]",
+                "AdminCreds": {
+                  "UserName": "[parameters('adminUsername')]",
+                  "Password": "PrivateSettingsRef:AdminPassword"
+                }
+              }
+            },
+            "protectedSettings": {
+              "Items": {
+                "AdminPassword": "[parameters('adminPassword')]"
+              }
             }
           }
         }

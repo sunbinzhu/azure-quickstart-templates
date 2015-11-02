@@ -455,8 +455,8 @@
           "scriptBaseUri": {
             "value": "[variables('customScriptLocation')]"
           },
-          "computeNodeCommandStr": {
-            "value": "[variables('computeNodeCommandStr')]"
+          "privateDomainName": {
+            "value": "[parameters('privateDomainName')]"
           }
         }
       }
