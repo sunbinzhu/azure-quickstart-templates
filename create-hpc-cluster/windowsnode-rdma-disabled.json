@@ -8,7 +8,7 @@
         "description": "The API version"
       }
     },
-    "location": { 
+    "location": {
       "type": "string",
       "metadata": {
         "description": "The location in which the resources are created"
