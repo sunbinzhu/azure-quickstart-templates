@@ -240,7 +240,7 @@
       "properties": {
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
         "dnsSettings": {
-          "domainNameLabel": "[parameters('clusterName')]"
+          "domainNameLabel": "[toLower(parameters('clusterName'))]"
         }
       }
     },
@@ -483,7 +483,7 @@
             "value": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=', parameters('computeNodeImage'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
           },
           "scriptBaseUri": {
-            "value": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster-linux-cn/"
+            "value": "[variables('customScriptLocation')]"
           },
           "clusterName": {
             "value": "[parameters('clusterName')]"
