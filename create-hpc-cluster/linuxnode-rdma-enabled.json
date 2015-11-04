@@ -196,7 +196,7 @@
             "typeHandlerVersion": "1.3",
             "settings": {
               "fileUris": [
-                "[concat(parameters('scriptBaseUri'), parameters('updatednsrecord.sh'))]"
+                "[concat(parameters('scriptBaseUri'), 'updatednsrecord.sh')]"
               ],
               "commandToExecute": "[concat('bash updatednsrecord.sh ', parameters('privateDomainName'), ' ', reference(parameters('nicName')).ipConfigurations[0].properties.privateIPAddress)]"
             }
