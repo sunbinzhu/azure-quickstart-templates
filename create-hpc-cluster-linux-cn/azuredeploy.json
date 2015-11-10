@@ -29,10 +29,15 @@
     },
     "storageAccountType": {
       "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard-LRS",
+        "Standard-GRS",
+        "Standard-RAGRS"
+      ],
       "metadata": {
         "description": "The type of the Storage Account created"
-      },
-      "defaultValue": "Standard_LRS"
+      }
     },
     "headNodeVMSize": {
       "type": "string",
