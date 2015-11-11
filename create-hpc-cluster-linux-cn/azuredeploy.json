@@ -24,7 +24,7 @@
     "storageAccountNamePrefix": {
       "type": "string",
       "metadata": {
-        "description": "The prefix of the new storage account created to store the VMs disks."
+        "description": "The name prefix of the new storage accounts created to store the VMs disks. One storage account dedicated for head node, and one storage account every 10 compute nodes. For example, if 'mystorage' is specified, and there are 22 compute nodes, then 'mystoragehn' for head node, 'mystorage00', 'mystorage01' and 'mystorage02' for compute nodes."
       }
     },
     "storageAccountType": {
@@ -144,8 +144,8 @@
     "apiVersion": "2015-05-01-preview",
     "location": "[resourceGroup().location]",
     "nbrCNPerStorageAccount": 10,
-    "storageAccountNumber": "[add(div(parameters('computeNodeNumber'), variables('nbrCNPerStorageAccount')), 1)]",
-    "hnStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), '00')]",
+    "cnStorageAccountNumber": "[add(div(parameters('computeNodeNumber'), variables('nbrCNPerStorageAccount')), 1)]",
+    "hnStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), 'hn')]",
     "hnStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',variables('hnStorageAccountName'))]",
     "addressPrefix": "10.0.0.0/16",
     "subnet1Name": "Subnet-1",
@@ -226,13 +226,9 @@
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "name": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(copyIndex()), 2, '0'))]",
+      "name": "[variables('hnStorageAccountName')]",
       "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
-      "copy": {
-        "name": "hpcStorageAccounts",
-        "count": "[variables('storageAccountNumber')]"
-      },
       "properties": {
         "accountType": "[parameters('storageAccountType')]"
       }
@@ -428,13 +424,29 @@
     },
 
     {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(copyIndex()), 2, '0'))]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/updateVNetDNS",
+      ],
+      "copy": {
+        "name": "hpcStorageAccounts",
+        "count": "[variables('cnStorageAccountNumber')]"
+      },
+      "properties": {
+        "accountType": "[parameters('storageAccountType')]"
+      }
+    },
+    {
       "apiVersion": "2015-01-01",
       "type": "Microsoft.Resources/deployments",
       "name": "[concat('create', parameters('computeNodeNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]",
       "dependsOn": [
         "Microsoft.Resources/deployments/createAvailabilitySet",
         "Microsoft.Resources/deployments/updateVNetDNS",
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountNamePrefix'), padLeft(string(mod(copyIndex(), variables('storageAccountNumber'))), 2, '0'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('storageAccountNamePrefix'), padLeft(string(mod(copyIndex(), variables('cnStorageAccountNumber'))), 2, '0'))]"
       ],
       "copy": {
         "name": "CN",
@@ -466,7 +478,7 @@
             "value": "[parameters('computeNodeVMSize')]"
           },
           "storageAccountName": {
-            "value": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(mod(copyIndex(), variables('storageAccountNumber'))), 2, '0'))]"
+            "value": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(mod(copyIndex(), variables('cnStorageAccountNumber'))), 2, '0'))]"
           },
           "imgPublisher": {
             "value": "[variables('computeNodeImagePublisher')]"
