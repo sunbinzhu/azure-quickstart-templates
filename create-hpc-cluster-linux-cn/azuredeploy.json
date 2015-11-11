@@ -429,7 +429,7 @@
       "apiVersion": "[variables('apiVersion')]",
       "location": "[variables('location')]",
       "dependsOn": [
-        "Microsoft.Resources/deployments/updateVNetDNS",
+        "Microsoft.Resources/deployments/updateVNetDNS"
       ],
       "copy": {
         "name": "hpcStorageAccounts",
