@@ -5,17 +5,8 @@
     "clusterName": {
       "value": "myhpccluster01"
     },
-    "virtualNetworkName": {
-      "value": "hpcvnet"
-    },
     "privateDomainName": {
       "value": "hpc.local"
-    },
-    "storageAccountNamePrefix": {
-      "value": "hpcstorage"
-    },
-    "storageAccountType": {
-      "value": "Standard_LRS"
     },
     "headNodeVMSize": {
       "value": "Standard_A4"
