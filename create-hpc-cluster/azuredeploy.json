@@ -118,20 +118,20 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "The user name of the administrator"
+        "description": "Administrator user name for the virtual machines and the Active Directory domain."
       }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
-        "description": "The password of the administrator"
+        "description": "Administrator password for the virtual machines and the Active Directory domain"
       }
     },
     "headNodePostConfigScript": {
       "type": "string",
       "defaultValue": " ",
       "metadata": {
-        "description": "Optional, specify the script url and command line if you want to run your custom script on the head node after it is configured. The script url must be public available, and you can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
+        "description": "Optional, specify the http/https url of the PowerShell script you want to run on the head node after it is configured. The script url must be public available, and you can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
       }
     }
   },
@@ -186,6 +186,8 @@
       "ComputeNode": "2012R2CN",
       "ComputeNodeWithExcel": "2012R2CNExcel"
     },
+    "computeNodeImagePublisher": "MicrosoftWindowsServerHPCPack",
+    "computeNodeImageOffer": "WindowsServerHPCPack",
     "computeNodeImageSku": "[variables('availableCNImageSkus')[parameters('computeNodeImage')]]",
     "adminBase64Password": "[base64(parameters('adminPassword'))]",
     "customScriptLocation": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster/",
@@ -409,6 +411,7 @@
         "accountType": "[parameters('storageAccountType')]"
       }
     },
+
     {
       "apiVersion": "2015-01-01",
       "type": "Microsoft.Resources/deployments",
@@ -451,10 +454,10 @@
             "value": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(mod(copyIndex(), variables('cnStorageAccountNumber'))), 2, '0'))]"
           },
           "imgPublisher": {
-            "value": "MicrosoftWindowsServerHPCPack"
+            "value": "[variables('computeNodeImagePublisher')]"
           },
           "imgOffer": {
-            "value": "WindowsServerHPCPack"
+            "value": "[variables('computeNodeImageOffer')]"
           },
           "imgSku": {
             "value": "[variables('computeNodeImageSku')]"
@@ -485,3 +488,4 @@
     }
   ]
 }
+
