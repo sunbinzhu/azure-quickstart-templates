@@ -594,7 +594,7 @@
             "value": "[variables('availabilitySetName')]"
           },
           "customData": {
-            "value": ""
+            "value": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nVMSize=', parameters('computeNodeVMSize')))]"
           },
           "scriptBaseUri": {
             "value": "[variables('customScriptLocation')]"

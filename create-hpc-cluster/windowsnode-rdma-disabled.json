@@ -172,7 +172,7 @@
       "resources": [
         {
           "type": "Microsoft.Compute/virtualMachines/extensions",
-          "name": "[concat(parameters('vmName'), '/configureComputeNode')]",
+          "name": "[concat(parameters('vmName'), '/configureHpcNode')]",
           "apiVersion": "[parameters('apiVersion')]",
           "location": "[parameters('location')]",
           "dependsOn": [
