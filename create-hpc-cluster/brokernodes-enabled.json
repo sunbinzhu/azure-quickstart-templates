@@ -150,7 +150,7 @@
             "value": "[concat(parameters('nicNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]"
           },
           "subnetId": {
-            "value": "[variables('subnetRef')]"
+            "value": "[parameters('subnetId')]"
           },
           "vmName": {
             "value": "[concat(parameters('vmNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]"
