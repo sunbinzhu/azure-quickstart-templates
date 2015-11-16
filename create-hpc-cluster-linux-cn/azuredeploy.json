@@ -286,6 +286,9 @@
           "apiVersion": {
             "value": "[variables('apiVersion')]"
           },
+          "location": {
+            "value": "[variables('location')]"
+          },
           "availabilitySetName": {
             "value": "[variables('availabilitySetName')]"
           }
@@ -311,6 +314,9 @@
         "parameters": {
           "apiVersion": {
             "value": "[variables('apiVersion')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
           },
           "vmName": {
             "value": "[parameters('clusterName')]"
@@ -357,6 +363,12 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "apiVersion": {
+            "value": "[variables('apiVersion')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
           "virtualNetworkName": {
             "value": "[variables('virtualNetworkName')]"
           },
@@ -504,3 +516,4 @@
      }
    }
 }
+
