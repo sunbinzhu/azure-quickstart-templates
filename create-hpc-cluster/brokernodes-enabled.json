@@ -1,0 +1,222 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json# ",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "apiVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The API version"
+      }
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The location in which the resources are created"
+      }
+    },
+    "nicNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The network interface name prefix for the broker nodes"
+      }
+    },
+    "subnetId": {
+      "type": "string",
+      "metadata": {
+        "description": "The Id of the subnet in which the node is created"
+      }
+    },
+    "vmNumber": {
+      "type": "int",
+      "metadata": {
+        "description": "The number of broker nodes"
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The VM name prefix for the broker nodes"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "The VM role size"
+      }
+    },
+    "rdmaState": {
+      "type": "string",
+      "metadata": {
+        "description": "The RDMA state, enabled or disabled"
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "The storage account name to store the VHD of the broker nodes"
+      }
+    },
+    "imgPublisher": {
+      "type": "string",
+      "metadata": {
+        "description": "The publisher of the VM image"
+      }
+    },
+    "imgOffer": {
+      "type": "string",
+      "metadata": {
+        "description": "The offer of the VM image"
+      }
+    },
+    "imgSku": {
+      "type": "string",
+      "metadata": {
+        "description": "The sku of the VM image"
+      }
+    },
+    "imgVersion": {
+      "type": "string",
+      "metadata": {
+        "description": "The version of the VM image"
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "The user name of the administrator"
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password of the administrator"
+      }
+    },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The availability set name"
+      }
+    },
+    "customData": {
+      "type": "string",
+      "metadata": {
+        "description": "The custom data in base64 format"
+      }
+    },
+    "scriptBaseUri": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI of the script"
+      }
+    },
+    "clusterName": {
+      "type": "string",
+      "metadata": {
+        "description": "The HPC cluster name"
+      }
+    },
+    "privateDomainName": {
+      "type": "string",
+      "metadata": {
+        "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
+      }
+    }
+  },
+  "variables": { },
+  "resources": [
+    {
+      "apiVersion": "2015-01-01",
+      "type": "Microsoft.Resources/deployments",
+      "name": "[concat('create', parameters('vmNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]",
+      "copy": {
+        "name": "BN",
+        "count": "[parameters('vmNumber')]"
+      },
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('scriptBaseUri'), 'windowsnode-rdma-', parameters('rdmaState'), '.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiVersion": {
+            "value": "[parameters('apiVersion')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "nicName": {
+            "value": "[concat(parameters('nicNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]"
+          },
+          "subnetId": {
+            "value": "[variables('subnetRef')]"
+          },
+          "vmName": {
+            "value": "[concat(parameters('vmNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]"
+          },
+          "vmSize": {
+            "value": "[parameters('vmSize')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('storageAccountName')]"
+          },
+          "imgPublisher": {
+            "value": "[parameters('imgPublisher')]"
+          },
+          "imgOffer": {
+            "value": "[parameters('imgOffer')]"
+          },
+          "imgSku": {
+            "value": "[parameters('imgSku')]"
+          },
+          "imgVersion": {
+            "value": "[parameters('imgVersion')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "availabilitySetName": {
+            "value": "[parameters('availabilitySetName')]"
+          },
+          "customData": {
+            "value": "[parameters('customData')]"
+          },
+          "scriptBaseUri": {
+            "value": "[parameters('scriptBaseUri')]"
+          },
+          "privateDomainName": {
+            "value": "[parameters('privateDomainName')]"
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmNamePrefix'), padLeft(string(copyIndex()), 3, '0'),'/installBrokerNode')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[variables('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/deployments/create', parameters('vmNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]"
+      ],
+      "copy": {
+        "name": "InstallBN",
+        "count": "[parameters('vmNumber')]"
+      },
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "1.4",
+        "settings": {
+          "fileUris": [
+            "[concat(parameters('scriptBaseUri'), 'PrepareBN.ps1')]"
+          ],
+          "commandToExecute": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareBN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -ClusterName ', parameters('clusterName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', base64(parameters('adminPassword')), '\"')]"
+        }
+      }
+    }
+  ]
+}

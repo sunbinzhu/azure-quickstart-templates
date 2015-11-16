@@ -91,6 +91,49 @@
         "description": "The VM role size of the compute nodes"
       }
     },
+    "brokerNodeNumber": {
+      "type": "string",
+      "defaultValue": "0",
+      "allowedValues": [
+        "0",
+        "1",
+        "2"
+      ],
+      "metadata": {
+        "description": "The number of the broker nodes"
+      }
+    },
+    "brokerNodeNamePrefix": {
+      "type": "string",
+      "defaultValue": "IaaSBN-",
+      "metadata": {
+        "description": "Specify the name prefix of the broker nodes. It can contain letters, numbers and hyphens and must start with a letter, up to 12 characters. For example, if 'IaaSBN-' is specified, the compute node names will be 'IaaSBN-000', 'IaaSBN-001', ..."
+      }
+    },
+
+    "brokerNodeVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A4",
+      "allowedValues": [
+        "Standard_A3",
+        "Standard_A4",
+        "Standard_A5",
+        "Standard_A6",
+        "Standard_A7",
+        "Standard_A8",
+        "Standard_A9",
+        "Standard_A10",
+        "Standard_A11",
+        "Standard_D3",
+        "Standard_D4",
+        "Standard_D12",
+        "Standard_D13",
+        "Standard_D14"
+      ],
+      "metadata": {
+        "description": "The VM role size of the broker nodes"
+      }
+    },
     "adminUsername": {
       "type": "string",
       "metadata": {
@@ -165,6 +208,14 @@
       "ComputeNode": "2012R2CN",
       "ComputeNodeWithExcel": "2012R2CNExcel"
     },
+    "brokerNodeJumpBox": {
+      "0": "disabled",
+      "1": "enabled",
+      "2": "enabled"
+    },
+    "brokerNodeImagePublisher": "MicrosoftWindowsServer",
+    "brokerNodeImageOffer": "WindowsServer",
+    "brokerNodeImageSku": "2012-R2-Datacenter",
     "computeNodeImagePublisher": "MicrosoftWindowsServerHPCPack",
     "computeNodeImageOffer": "WindowsServerHPCPack",
     "computeNodeImageSku": "[variables('availableCNImageSkus')[parameters('computeNodeImage')]]",
@@ -458,6 +509,86 @@
           },
           "scriptBaseUri": {
             "value": "[variables('customScriptLocation')]"
+          },
+          "privateDomainName": {
+            "value": "[parameters('privateDomainName')]"
+          }
+        }
+      }
+    },
+
+    {
+      "apiVersion": "2015-01-01",
+      "type": "Microsoft.Resources/deployments",
+      "name": "createBrokerNodesIfNeeded",
+      "dependsOn": [
+        "Microsoft.Resources/deployments/createAvailabilitySet",
+        "Microsoft.Resources/deployments/updateVNetDNS",
+        "[concat('Microsoft.Storage/storageAccounts/', variables('hnStorageAccountName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('customScriptLocation'), 'brokernodes-', variables('brokerNodeJumpBox')[parameters('brokerNodeNumber')], '.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiVersion": {
+            "value": "[variables('apiVersion')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "nicNamePrefix": {
+            "value": "[concat(variables('nicName'), 'bn')]"
+          },
+          "subnetId": {
+            "value": "[variables('subnetRef')]"
+          },
+          "vmNumber": {
+            "value": "[parameters('brokerNodeNumber')]"
+          },
+          "vmNamePrefix": {
+            "value": "[parameters('brokerNodeNamePrefix')]"
+          },
+          "vmSize": {
+            "value": "[parameters('brokerNodeVMSize')]"
+          },
+          "rdmaState": {
+            "value": "[variables('vmSizeRDMAStates')[parameters('brokerNodeVMSize')]]"
+          },
+          "storageAccountName": {
+            "value": "[variables('hnStorageAccountName')]"
+          },
+          "imgPublisher": {
+            "value": "[variables('brokerNodeImagePublisher')]"
+          },
+          "imgOffer": {
+            "value": "[variables('brokerNodeImageOffer')]"
+          },
+          "imgSku": {
+            "value": "[variables('brokerNodeImageSku')]"
+          },
+          "imgVersion": {
+            "value": "latest"
+          },
+          "adminUsername": {
+            "value": "[parameters('adminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "availabilitySetName": {
+            "value": "[variables('availabilitySetName')]"
+          },
+          "customData": {
+            "value": ""
+          },
+          "scriptBaseUri": {
+            "value": "[variables('customScriptLocation')]"
+          },
+          "clusterName": {
+            "value": "[parameters('clusterName')]"
           },
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
