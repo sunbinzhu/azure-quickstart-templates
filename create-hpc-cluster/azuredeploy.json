@@ -114,7 +114,7 @@
       "type": "string",
       "defaultValue": "IaaSBN-",
       "metadata": {
-        "description": "Specify the name prefix of the broker nodes. It can contain letters, numbers and hyphens and must start with a letter, up to 12 characters. For example, if 'IaaSBN-' is specified, the compute node names will be 'IaaSBN-000', 'IaaSBN-001', ..."
+        "description": "Specify the name prefix of the broker nodes. It can contain letters, numbers and hyphens and must start with a letter, up to 12 characters. For example, if 'IaaSBN-' is specified, the broker node names will be 'IaaSBN-000', 'IaaSBN-001', ..."
       }
     },
 
