@@ -179,7 +179,7 @@
     "publicIPAddressNameHN": "[concat(variables('publicIPAddressName'),'-HN')]",
     "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-AVSet')]",
     "nbrVMPerAvailabilitySet": 50,
-    "availabilitySetNumber": "[add(div(variables('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
+    "availabilitySetNumber": "[add(div(parameters('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
     "dnsName": "[concat(parameters('clusterName'), 'ep')]",
     "nicName": "[concat(parameters('clusterName'),'-nic')]",
     "nicNameHN": "[concat(variables('nicName'),'-hn')]",
