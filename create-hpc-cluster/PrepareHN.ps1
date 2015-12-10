@@ -286,8 +286,7 @@ function PrepareHeadNode
                     TraceInfo 'Start to register HpcNodeOnlineCheck Task'
                     $HpcNodeOnlineCheckFile = "$scriptPath\PrepareHN.ps1"
                     $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HpcNodeOnlineCheckFile' -NodeStateCheck`""
-                    $now = get-date
-                    $trigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) -At $now -RepetitionDuration (New-TimeSpan -Days 3650) -Once
+                    $trigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) -At (get-date) -RepetitionDuration (New-TimeSpan -Minutes 90) -Once
                     Register-ScheduledTask -TaskName 'HpcNodeOnlineCheck' -Action $action -Trigger $trigger -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest | Out-Null
                     TraceInfo 'Finish to register task HpcNodeOnlineCheck'
                     if(-not $?)
@@ -410,15 +409,6 @@ function NodeStateCheck
 
     $datetimestr = (Get-Date).ToString('yyyyMMdd')
     $script:PrepareNodeLogFile = "$env:windir\Temp\HpcNodeCheckLog-$datetimestr.txt"
-
-    $unapprovedNodes = @()
-    $unapprovedNodes += Get-HpcNode -State Unknown -ErrorAction SilentlyContinue
-    if($unapprovedNodes.Count -gt 0)
-    {
-        TraceInfo 'Start to assign template to unknown nodes'
-        PrintNodes $unapprovedNodes
-        Assign-HpcNodeTemplate -Name "Default ComputeNode Template" -Node $unapprovedNodes -Confirm:$false        
-    }
 
     $offlineNodes = @()
     $offlineNodes += Get-HpcNode -State Offline -ErrorAction SilentlyContinue
