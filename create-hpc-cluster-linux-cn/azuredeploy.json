@@ -232,13 +232,13 @@
       "Standard_GS4": "disabled",
       "Standard_GS5": "disabled"
     },
-    "avSetJumpBox": {
+    "hnRDMAJumpBox": {
       "disabled-disabled": "disabled",
-      "disabled-enabled": "enabled",
-      "enabled-disabled": "enabled",
+      "disabled-enabled": "disabled",
+      "enabled-disabled": "disabled",
       "enabled-enabled": "enabled"
     },
-    "avSetState": "[variables('avSetJumpBox')[concat(variables('vmSizeRDMAStates')[parameters('headNodeVMSize')], '-', variables('vmSizeRDMAStates')[parameters('computeNodeVMSize')])]]",
+    "hnRDMAState": "[variables('avSetJumpBox')[concat(variables('vmSizeRDMAStates')[parameters('headNodeVMSize')], '-', variables('vmSizeRDMAStates')[parameters('computeNodeVMSize')])]]",
     "linuxImagePublishers": {
       "CentOS_6.6": "OpenLogic",
       "CentOS_7.0": "OpenLogic",
@@ -384,7 +384,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('customScriptLocation'), 'headnode-rdma-', variables('vmSizeRDMAStates')[parameters('headNodeVMSize')], '.json')]",
+          "uri": "[concat(variables('customScriptLocation'), 'headnode-rdma-', variables('hnRDMAState'), '.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
