@@ -237,7 +237,7 @@
       "enabled-disabled": "disabled",
       "enabled-enabled": "enabled"
     },
-    "hnRDMAState": "[variables('avSetJumpBox')[concat(variables('vmSizeRDMAStates')[parameters('headNodeVMSize')], '-', variables('vmSizeRDMAStates')[parameters('computeNodeVMSize')])]]",
+    "hnRDMAState": "[variables('hnRDMAJumpBox')[concat(variables('vmSizeRDMAStates')[parameters('headNodeVMSize')], '-', variables('vmSizeRDMAStates')[parameters('computeNodeVMSize')])]]",
     "availableCNImageSkus": {
       "ComputeNode": "2012R2CN",
       "ComputeNodeWithExcel": "2012R2CNExcel"
