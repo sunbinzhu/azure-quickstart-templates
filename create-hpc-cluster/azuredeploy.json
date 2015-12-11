@@ -322,13 +322,29 @@
     },
 
     {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[concat(variables('availabilitySetNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[variables('location')]",
-      "copy": {
-        "name": "hpcAvsets",
-        "count": "[variables('availabilitySetNumber')]"
+      "apiVersion": "2015-01-01",
+      "type": "Microsoft.Resources/deployments",
+      "name": "createAvailabilitySets",
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(variables('customScriptLocation'), 'availabilitySets.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiVersion": {
+            "value": "[variables('apiVersion')]"
+          },
+          "location": {
+            "value": "[variables('location')]"
+          },
+          "availabilitySetNamePrefix": {
+            "value": "[variables('availabilitySetNamePrefix')]"
+          },
+          "availabilitySetNumber": {
+            "value": "[variables('availabilitySetNumber')]"
+          }
+        }
       }
     },
 
@@ -339,7 +355,7 @@
       "dependsOn": [
         "[concat('Microsoft.Network/networkInterfaces/', variables('nicNameHN'))]",
         "[concat('Microsoft.Storage/storageAccounts/', variables('hnStorageAccountName'))]",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetNamePrefix'), '000')]"
+        "Microsoft.Resources/deployments/createAvailabilitySets"
       ],
       "properties": {
         "mode": "Incremental",
@@ -472,9 +488,9 @@
       "type": "Microsoft.Resources/deployments",
       "name": "[concat('create', parameters('computeNodeNamePrefix'), padLeft(string(copyIndex()), 3, '0'))]",
       "dependsOn": [
+        "Microsoft.Resources/deployments/createAvailabilitySets",
         "Microsoft.Resources/deployments/updateVNetDNS",
-        "[concat('Microsoft.Compute/availabilitySets/', variables('availabilitySetNamePrefix'), padLeft(string(div(add(copyIndex(), 1), variables('nbrVMPerAvailabilitySet'))), 3, '0'))]",
-        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountNamePrefix'), padLeft(string(add(mod(copyIndex(), variables('cnStorageAccountNumber')), variables('cnStorageAccountIndexOffset'))), variables('storageAccountIndexWidth'), '0'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountNamePrefix'), padLeft(string(add(div(copyIndex(), variables('nbrCNPerStorageAccount')), variables('cnStorageAccountIndexOffset'))), variables('storageAccountIndexWidth'), '0'))]"
       ],
       "copy": {
         "name": "CN",
@@ -506,7 +522,7 @@
             "value": "[parameters('computeNodeVMSize')]"
           },
           "storageAccountName": {
-            "value": "[concat(variables('storageAccountNamePrefix'), padLeft(string(add(mod(copyIndex(), variables('cnStorageAccountNumber')), variables('cnStorageAccountIndexOffset'))), variables('storageAccountIndexWidth'), '0'))]"
+            "value": "[concat(variables('storageAccountNamePrefix'), padLeft(string(add(div(copyIndex(), variables('nbrCNPerStorageAccount')), variables('cnStorageAccountIndexOffset'))), variables('storageAccountIndexWidth'), '0'))]"
           },
           "imgPublisher": {
             "value": "[variables('computeNodeImagePublisher')]"
