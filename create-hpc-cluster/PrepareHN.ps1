@@ -100,7 +100,8 @@ function PrepareHeadNode
             $dbArgs = '-DBServerInstance .\COMPUTECLUSTER'
             $HNPreparePsFile = "$scriptPath\HPCHNPrepare.ps1"
             $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HNPreparePsFile' $dbArgs`""
-            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -RunLevel Highest *>$script:PrepareNodeLogFile
+            $principal = New-ScheduledTaskPrincipal -UserId "LOCALSYSTEM" -LogonType ServiceAccount
+            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -Principal $principal *>$script:PrepareNodeLogFile
             if(-not $?)
             {
                 TraceInfo 'Failed to schedule HPC Head Node Preparation Task'
