@@ -140,7 +140,7 @@
     "adminUsername": {
       "type": "string",
       "metadata": {
-        "description": "Administrator user name for the virtual machines and the Active Directory domain."
+        "description": "Administrator username for the virtual machines and the Active Directory domain."
       }
     },
     "adminPassword": {
@@ -163,7 +163,7 @@
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
     "storageAccountNamePrefix": "[toLower(concat('hpc', uniqueString(resourceGroup().id, parameters('clusterName'))))]",
     "storageAccountType": "Standard_LRS",
-    "nbrCNPerStorageAccount": 10,
+    "nbrCNPerStorageAccount": 20,
     "cnStorageAccountNumber": "[add(div(sub(parameters('computeNodeNumber'), 1), variables('nbrCNPerStorageAccount')), 1)]",
     "cnStorageAccountIndexOffset": 1,
     "storageAccountIndexWidth": "[length(string(sub(add(variables('cnStorageAccountNumber'), variables('cnStorageAccountIndexOffset')), 1)))]",
