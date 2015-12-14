@@ -100,7 +100,7 @@ function PrepareHeadNode
             $dbArgs = '-DBServerInstance .\COMPUTECLUSTER'
             $HNPreparePsFile = "$scriptPath\HPCHNPrepare.ps1"
             $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HNPreparePsFile' $dbArgs`""
-            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest *>$script:PrepareNodeLogFile
+            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -RunLevel Highest *>$script:PrepareNodeLogFile
             if(-not $?)
             {
                 TraceInfo 'Failed to schedule HPC Head Node Preparation Task'
@@ -287,7 +287,7 @@ function PrepareHeadNode
                     $HpcNodeOnlineCheckFile = "$scriptPath\PrepareHN.ps1"
                     $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HpcNodeOnlineCheckFile' -NodeStateCheck`""
                     $trigger = New-ScheduledTaskTrigger -RepetitionInterval (New-TimeSpan -Minutes 1) -At (get-date) -RepetitionDuration (New-TimeSpan -Minutes 90) -Once
-                    Register-ScheduledTask -TaskName 'HpcNodeOnlineCheck' -Action $action -Trigger $trigger -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest | Out-Null
+                    Register-ScheduledTask -TaskName 'HpcNodeOnlineCheck' -Action $action -Trigger $trigger -RunLevel Highest | Out-Null
                     TraceInfo 'Finish to register task HpcNodeOnlineCheck'
                     if(-not $?)
                     {
