@@ -219,6 +219,7 @@
     },
     "artifactsBaseUrl": {
       "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
       "metadata": {
         "description": "Base URL for Marketplace",
         "artifactsBaseUrl": ""
@@ -241,8 +242,6 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',parameters('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
     "publicIPAddressType": "Dynamic",
-    "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-VM')]",
-    "publicIPAddressNameHN": "[concat(variables('publicIPAddressName'),'-HN')]",
     "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-AVSet')]",
     "nbrVMPerAvailabilitySet": 50,
     "availabilitySetNumber": "[add(div(variables('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
@@ -329,7 +328,7 @@
             "value": "[parameters('publicIPName')]"
           },
           "publicIPAddressType": {
-            "value": "dynamic"
+            "value": "[variables('publicIPAddressType')]"
           },
           "domainNameLabel": {
             "value": "[parameters('publicIPDNSNameLabel')]"
@@ -503,7 +502,7 @@
             "[concat(variables('customScriptLocation'), 'HPCHNPrepare.ps1')]",
             "[concat(variables('customScriptLocation'), 'HpcPrepareUtil.ps1')]"
           ],
-          "commandToExecute": "[concat(variables('headNodeCommandStr'), ' -AzureStorageConnStr \"', variables('hnStorageConnStrPrefix'), listKeys(variables('hnStorageAccountId'),variables('apiVersion')).key1, '\" -PublicDnsName ', reference(variables('publicIPAddressNameHN')).dnsSettings.fqdn)]"
+          "commandToExecute": "[concat(variables('headNodeCommandStr'), ' -AzureStorageConnStr \"', variables('hnStorageConnStrPrefix'), listKeys(variables('hnStorageAccountId'),variables('apiVersion')).key1, '\" -PublicDnsName ', reference('setupClusterPublicIP').outputs.fqdn.value)]"
         }
       }
     },
