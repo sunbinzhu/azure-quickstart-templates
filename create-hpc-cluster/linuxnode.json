@@ -194,7 +194,7 @@
             "typeHandlerVersion": "1.4",
             "settings": {
               "fileUris": [
-                "[concat(parameters('scriptBaseUri'), 'updatednsrecord.sh')]"
+                "[concat(parameters('scriptBaseUri'), '/updatednsrecord.sh')]"
               ]
             },
             "protectedSettings": {
