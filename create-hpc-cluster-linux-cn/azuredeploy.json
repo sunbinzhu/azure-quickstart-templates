@@ -165,41 +165,41 @@
     "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-HN')]",
     "computeNodeImageOsPlatform": "Linux",
     "computeNodeImages": {
-                  "CentOS_6.6": {
-                    "publisher": "OpenLogic",
-                    "offer": "CentOS",
-                    "sku": "6.6"
-                  },
-                  "CentOS_7.0": {
-                    "publisher": "OpenLogic",
-                    "offer": "CentOS",
-                    "sku": "7.0"
-                  },
-                  "SLES_12": {
-                    "publisher": "SUSE",
-                    "offer": "SLES",
-                    "sku": "12"
-                  },
-                  "SLES_Premium_12": {
-                    "publisher": "SUSE",
-                    "offer": "SLES-Priority",
-                    "sku": "12"
-                  },
-                  "SLES_HPC_12": {
-                    "publisher": "SUSE",
-                    "offer": "SLES-HPC",
-                    "sku": "12"
-                  },
-                  "SLES_HPC_Premium_12": {
-                    "publisher": "SUSE",
-                    "offer": "SLES-HPC-Priority",
-                    "sku": "12"
-                  },
-                  "Ubuntu_14.04": {
-                    "publisher": "Canonical",
-                    "offer": "UbuntuServer",
-                    "sku": "14.04.3-LTS"
-                  }
+      "CentOS_6.6": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS",
+        "sku": "6.6"
+      },
+      "CentOS_7.0": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS",
+        "sku": "7.0"
+      },
+      "SLES_12": {
+        "publisher": "SUSE",
+        "offer": "SLES",
+        "sku": "12"
+      },
+      "SLES_Premium_12": {
+        "publisher": "SUSE",
+        "offer": "SLES-Priority",
+        "sku": "12"
+      },
+      "SLES_HPC_12": {
+        "publisher": "SUSE",
+        "offer": "SLES-HPC",
+        "sku": "12"
+      },
+      "SLES_HPC_Premium_12": {
+        "publisher": "SUSE",
+        "offer": "SLES-HPC-Priority",
+        "sku": "12"
+      },
+      "Ubuntu_14.04": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "14.04.3-LTS"
+      }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
     "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
