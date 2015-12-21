@@ -231,8 +231,14 @@
           "storageAccountNamePrefix": {
             "value": "[variables('storageAccountNamePrefix')]"
           },
+          "storageAccountStartIndex": {
+            "value": 0
+          },
           "storageAccountType": {
             "value": "[variables('storageAccountType')]"
+          },
+          "nbrCNPerStorageAccount": {
+            "value": 20
           },
           "headNodeVMSize": {
             "value": "[parameters('headNodeVMSize')]"
