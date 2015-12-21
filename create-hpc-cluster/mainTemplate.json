@@ -198,10 +198,10 @@
     "cnOsPlatformRelated": {
       "Linux": {
         "template": "linuxnode.json",
-        "hnDNSArg": " -UnsecureDNSUpdate ",
-      }
+        "hnDNSArg": " -UnsecureDNSUpdate "
+      },
       "Windows": {
-        "template": "[concat('windowsnode-rdma-', variables('cnRDMAState'), '.json')]"
+        "template": "[concat('windowsnode-rdma-', variables('cnRDMAState'), '.json')]",
         "hnDNSArg": " ",
       }
     },
