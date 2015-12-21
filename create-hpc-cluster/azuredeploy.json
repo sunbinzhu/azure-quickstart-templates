@@ -214,13 +214,13 @@
             "value": "[variables('computeNodeImageOsPlatform')]"
           },
           "computeNodeImagePublisher": {
-            "value": "[variables('computeNodeImages')[variables('computeNodeImage')].publisher]"
+            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].publisher]"
           },
           "computeNodeImageOffer": {
-            "value": "[variables('computeNodeImages')[variables('computeNodeImage')].offer]"
+            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].offer]"
           },
           "computeNodeImageSku": {
-            "value": "[variables('computeNodeImages')[variables('computeNodeImage')].sku]"
+            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].sku]"
           },
           "computeNodeNamePrefix": {
             "value": "[parameters('computeNodeNamePrefix')]"
