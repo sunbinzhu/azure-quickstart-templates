@@ -177,7 +177,7 @@
     "apiVersion": "2015-06-15",
     "computeNodeNumber": "[int(parameters('computeNodeNumber'))]",
     "cnStorageAccountNumber": "[add(div(sub(variables('computeNodeNumber'), 1), parameters('nbrCNPerStorageAccount')), 1)]",
-    "cnStorageAccountStartIndex": "[add(parameters('storageAccountStartIndex'), 1)],
+    "cnStorageAccountStartIndex": "[add(parameters('storageAccountStartIndex'), 1)]",
     "storageAccountIndexWidth": "[length(string(sub(add(variables('cnStorageAccountNumber'), variables('cnStorageAccountStartIndex')), 1)))]",
     "hnStorageAccountName": "[concat(parameters('storageAccountNamePrefix'), padLeft(string(parameters('storageAccountStartIndex')), variables('storageAccountIndexWidth'), '0'))]",
     "hnStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',variables('hnStorageAccountName'))]",
