@@ -175,6 +175,7 @@
         "sku": "2012R2CNExcel"
       }
     },
+    "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
     "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
   },
   "resources": [
@@ -214,13 +215,13 @@
             "value": "[variables('computeNodeImageOsPlatform')]"
           },
           "computeNodeImagePublisher": {
-            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].publisher]"
+            "value": "[variables('currentComputeNodeImage').publisher]"
           },
           "computeNodeImageOffer": {
-            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].offer]"
+            "value": "[variables('currentComputeNodeImage').offer]"
           },
           "computeNodeImageSku": {
-            "value": "[variables('computeNodeImages')[parameters('computeNodeImage')].sku]"
+            "value": "[variables('currentComputeNodeImage').sku]"
           },
           "computeNodeNamePrefix": {
             "value": "[parameters('computeNodeNamePrefix')]"
