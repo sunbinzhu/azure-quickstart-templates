@@ -204,7 +204,6 @@
     "computeNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareCN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -ClusterName ', parameters('clusterName'),' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), ' -PostConfigScript \"', parameters('computeNodePostConfigScript'), '\" -FromCustomImage')]",
     "stripUniqueFileName": "[concat(uniqueString(resourceGroup().id), '.json')]",
     "artifactsBaseUrl": "[replace(uri(deployment().properties.templateLink.uri, variables('stripUniqueFileName')), concat('/', variables('stripUniqueFileName')),'')]",
-    "computeNodeTemplateUrl": "[concat(variables('artifactsBaseUrl'), 'customnode-rdma-', variables('cnRDMAState'))]",
     "sharedResxBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster"
   },
   "resources": [
