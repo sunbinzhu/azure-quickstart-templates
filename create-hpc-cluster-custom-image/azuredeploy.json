@@ -452,7 +452,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat(variables('artifactsBaseUrl'), '/customnode-rdma-', variables('cnRDMAState'))]",
+          "uri": "[concat(variables('artifactsBaseUrl'), '/customnode-rdma-', variables('cnRDMAState'), '.json')]",
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
