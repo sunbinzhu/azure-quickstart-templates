@@ -94,9 +94,7 @@
     }
   },
   "variables":{
-    "osDiskUri": "[uri(parameters('sourceImageVhdUri'), concat(parameters('vmName'), uniqueString(parameters('vmName')), '.vhd'))]",
-    "adminBase64Password": "[base64(parameters('adminPassword'))]",
-    "computeNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareCN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -ClusterName ', parameters('clusterName'),' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), ' -PostConfigScript \"', parameters('computeNodePostConfigScript'), '\" -FromCustomImage')]",
+    "osDiskUri": "[uri(parameters('sourceImageVhdUri'), concat(parameters('vmName'), uniqueString(parameters('vmName')), '.vhd'))]"
   },
   "resources": [
     {
@@ -198,7 +196,8 @@
                 "AdminCreds": {
                   "UserName": "[parameters('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
-                }
+                },
+                "PostConfigScript": "[parameters('computeNodePostConfigScript')]"
               }
             },
             "protectedSettings": {
