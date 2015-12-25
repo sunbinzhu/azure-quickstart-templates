@@ -109,6 +109,13 @@
       "metadata": {
         "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
+    },
+    "computeNodePostConfigScript": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Optional URL of a public available PowerShell script you want to run on the compute nodes after they are configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
+      }    
     }
   },
   "resources": [
@@ -213,7 +220,8 @@
                 "AdminCreds": {
                   "UserName": "[parameters('adminUsername')]",
                   "Password": "PrivateSettingsRef:AdminPassword"
-                }
+                },
+                "PostConfigScript": "[parameters('computeNodePostConfigScript')]"
               }
             },
             "protectedSettings": {

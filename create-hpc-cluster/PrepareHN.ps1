@@ -173,7 +173,8 @@ function PrepareHeadNode
                     }
                 }
             }
-
+            
+            "Done" | Out-File "$env:windir\Temp\HPCPackHeadNodePrepared"
             Unregister-ScheduledTask -TaskName 'HPCPrepare' -Confirm:$false    
 
             if($taskSucceeded)
@@ -304,23 +305,64 @@ function PrepareHeadNode
 
                 if(-not [String]::IsNullOrWhiteSpace($PostConfigScript))
                 {
-                    $webclient = New-Object System.Net.WebClient
-                    $ss = $PostConfigScript -split ' '
-                    $fileWithPath = $ss[0]
-                    $args = ""
-                    if($ss.Count -gt 1)
+                    $scriptUrl = $PostConfigScript.Trim()
+                    $scriptArgs = ""
+                    $firstSpace = $scriptUrl.IndexOf(' ')
+                    if($firstSpace -gt 0)
                     {
-                        $args = $ss[1..$($ss.Count-1)] -join ' '
+                        $scriptUrl = $scriptUrl.Substring(0, $firstSpace)
+                        $scriptArgs = $scriptUrl.Substring($firstSpace + 1).Trim()
                     }
 
-                    $fileName = $($fileWithPath -split '/')[-1]
-                    $file = "$env:windir\Temp\$fileName"
-                    TraceInfo "download post config script from $fileWithPath"
-                    $webclient.DownloadFile($fileWithPath,$file)
-                    $command = "$file $args"
-                    TraceInfo "execute post config script $command"
-                    Invoke-Expression -Command $command
-                    TraceInfo "finish to post config script"
+                    if(-not [system.uri]::IsWellFormedUriString($scriptUrl,[System.UriKind]::Absolute) -or $scriptUrl -notmatch '.ps1$')
+                    {
+                        TraceInfo "Invalid url or not PowerShell script: $scriptUrl"
+                    }
+                    else
+                    {
+                        $scriptFileName = $($scriptUrl -split '/')[-1]
+                        $scriptFilePath = "$env:windir\Temp\$scriptFileName"
+
+                        $downloader = New-Object System.Net.WebClient
+                        $downloadRetry = 0
+                        $downloaded = $false
+                        while($true)
+                        {
+                            try
+                            {
+                                $downloader.DownloadFile($scriptUrl, $scriptFilePath)
+                                $downloaded = $true
+                                break
+                            }
+                            catch
+                            {
+                                if($downloadRetry -lt 10)
+                                {
+                                    TraceInfo ("Failed to download $scriptUrl, retry after 20 seconds:" + $_)
+                                    Clear-DnsClientCache
+                                    Start-Sleep -Seconds 20
+                                    $downloadRetry++
+                                }
+                                else
+                                {
+                                    TraceInfo "Failed to download $scriptUrl after 10 retries"
+                                }
+                            }
+                        }
+
+                        if($downloaded)
+                        {
+                            $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs"
+                            if($pobj.ReturnValue -eq 0)
+                            {
+                               TraceInfo "Start to run post config script: $scriptFilePath $scriptArgs."
+                            }
+                            else
+                            {
+                                TraceInfo "Failed to run: $scriptFilePath $scriptArgs."
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -402,7 +444,6 @@ function PrepareHeadNode
         Wait-Job $job
         TraceInfo 'Prepare head node job completed'
         Receive-Job $job -Verbose
-        TraceInfo 'receive completed'
     }
 }
 
@@ -427,6 +468,19 @@ function NodeStateCheck
 Set-StrictMode -Version 3
 if ($PsCmdlet.ParameterSetName -eq 'Prepare')
 {
+    if(Test-Path -Path "$env:windir\Temp\HPCPackHeadNodePrepared")
+    {
+        TraceInfo 'This head node was already prepared.'
+        return
+    }
+
+    $prepareTask = Get-ScheduledTask -TaskName 'HPCPrepare' -ErrorAction SilentlyContinue
+    if($null -ne $prepareTask)
+    {
+        TraceInfo 'This head node is on preparing'
+        return
+    }
+
     if(-not [string]::IsNullOrEmpty($SubscriptionId))
     {
         New-Item -Path HKLM:\SOFTWARE\Microsoft\HPC -Name IaaSInfo -Force | Out-Null

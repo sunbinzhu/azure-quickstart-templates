@@ -489,7 +489,7 @@
             "value": "[variables('computeNodeCustomData')]"
           },
           "scriptBaseUri": {
-            "value": "[variables('artifactsBaseUrl')]"
+            "value": "[variables('sharedResxBaseUrl')]"
           },
           "clusterName": {
             "value": "[parameters('clusterName')]"
