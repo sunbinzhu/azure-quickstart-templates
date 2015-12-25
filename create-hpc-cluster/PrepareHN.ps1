@@ -303,6 +303,7 @@ function PrepareHeadNode
                     TraceInfo 'Task HpcNodeOnlineCheck already exists'
                 }
 
+                $PostConfigScript = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($PostConfigScript))
                 if(-not [String]::IsNullOrWhiteSpace($PostConfigScript))
                 {
                     $scriptUrl = $PostConfigScript.Trim()
