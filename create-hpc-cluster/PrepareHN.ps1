@@ -303,12 +303,13 @@ function PrepareHeadNode
                     TraceInfo 'Task HpcNodeOnlineCheck already exists'
                 }
 
-                $PostConfigScript = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($PostConfigScript))
                 if(-not [String]::IsNullOrWhiteSpace($PostConfigScript))
                 {
-                    $scriptUrl = $PostConfigScript.Trim()
+                    $PostConfigScript = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($PostConfigScript))
+                    $PostConfigScript = $PostConfigScript.Trim()
+                    $scriptUrl = $PostConfigScript
                     $scriptArgs = ""
-                    $firstSpace = $scriptUrl.IndexOf(' ')
+                    $firstSpace = $PostConfigScript.IndexOf(' ')
                     if($firstSpace -gt 0)
                     {
                         $scriptUrl = $scriptUrl.Substring(0, $firstSpace)
@@ -353,7 +354,7 @@ function PrepareHeadNode
 
                         if($downloaded)
                         {
-                            $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs"
+                            $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs"
                             if($pobj.ReturnValue -eq 0)
                             {
                                TraceInfo "Start to run post config script: $scriptFilePath $scriptArgs."
