@@ -360,52 +360,45 @@ function PrepareHeadNode
                         {
                             $postScriptCmdRet = Invoke-Command -ComputerName $env:COMPUTERNAME -Credential $domainUserCred -ScriptBlock {
                                 param($userCred, $scriptFilePath, $scriptArgs)
-                                $scriptJob = Start-Job -Credential $userCred -ScriptBlock {
-                                    param($scriptFilePath, $scriptArgs)
-                                    # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
-                                    $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
-                                    $scriptCmd = "'test' | Out-File '$testFileName'; $scriptFilePath $scriptArgs"
-                                    $encodedCmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($scriptCmd))
-                                    $scriptRetry = 0
-                                    while($true)
+                                # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
+                                $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
+                                $scriptCmd = "'test' | Out-File '$testFileName'; $scriptFilePath $scriptArgs"
+                                $encodedCmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($scriptCmd))
+                                $scriptRetry = 0
+                                while($true)
+                                {
+                                    "$(get-date): Try to start process $scriptRetry : $scriptFilePath $scriptArgs."
+                                    $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $encodedCmd"
+                                    if($pobj.ReturnValue -eq 0)
                                     {
-                                        "$(get-date): Try to start process $scriptRetry : $scriptFilePath $scriptArgs."
-                                        $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $encodedCmd"
-                                        if($pobj.ReturnValue -eq 0)
+                                        Start-Sleep -Seconds 5
+                                        if(Test-Path -Path $testFileName)
                                         {
-                                            Start-Sleep -Seconds 5
-                                            if(Test-Path -Path $testFileName)
-                                            {
-                                                Remove-Item -Path $testFileName -Force -ErrorAction Continue
-                                                "$(get-date): Started to run: $scriptFilePath $scriptArgs."
-                                                break
-                                            }
-                                            else
-                                            {
-                                                "$(get-date): The new process failed to run, stop it."
-                                                Stop-Process -Id $pobj.ProcessId
-                                            }
+                                            Remove-Item -Path $testFileName -Force -ErrorAction Continue
+                                            "$(get-date): Started to run: $scriptFilePath $scriptArgs."
+                                            break
                                         }
                                         else
                                         {
-                                            "$(get-date): Failed to start process: $scriptFilePath $scriptArgs."
-                                        }
-
-                                        if($scriptRetry -lt 10)
-                                        {
-                                            $scriptRetry++
-                                            Start-Sleep -Seconds 10
-                                        }
-                                        else
-                                        {
-                                            throw "Failed to run post configuration script: $scriptFilePath $scriptArgs."
+                                            "$(get-date): The new process failed to run, stop it."
+                                            Stop-Process -Id $pobj.ProcessId
                                         }
                                     }
-                                } -ArgumentList @($scriptFilePath, $scriptArgs)
-                                
-                                Wait-Job $scriptJob
-                                "scriptjobstate: $($scriptJob.ChildJobs[0].JobStateInfo | fl | Out-String)"
-                                return ($scriptJob.ChildJobs[0].Output | Out-String)
+                                    else
+                                    {
+                                        "$(get-date): Failed to start process: $scriptFilePath $scriptArgs."
+                                    }
+
+                                    if($scriptRetry -lt 10)
+                                    {
+                                        $scriptRetry++
+                                        Start-Sleep -Seconds 10
+                                    }
+                                    else
+                                    {
+                                        throw "Failed to run post configuration script: $scriptFilePath $scriptArgs."
+                                    }
+                                }
                             } -ArgumentList @($domainUserCred, $scriptFilePath, $scriptArgs)
                             if(-not $?)
                             {
@@ -488,10 +481,8 @@ function PrepareHeadNode
         }
 
         Wait-Job $job
-        TraceInfo 'Prepare head node job completed'
-        TraceInfo "mainjobstate: $($job.JobStateInfo | out-string)"
-        TraceInfo "output: $($job.ChildJobs[0].Output | out-string)"
-        TraceInfo "jobstate: $($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
+        TraceInfo "PrepareHeadNode Job State:$($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
+        TraceInfo "PrepareHeadNode Job output: $($job.ChildJobs[0].Output | out-string)"
         Receive-Job $job -Verbose
     }
 }
