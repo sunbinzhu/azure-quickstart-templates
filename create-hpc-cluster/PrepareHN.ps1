@@ -31,6 +31,7 @@
     [Parameter(Mandatory=$false, ParameterSetName='Prepare')]
     [String] $AzureStorageConnStr="",
 
+    # The PostConfig script url and arguments in base64
     [Parameter(Mandatory=$false, ParameterSetName='Prepare')]
     [String] $PostConfigScript="",
 
@@ -94,7 +95,7 @@ function PrepareHeadNode
     }
     else
     {
-        $job = Start-Job -ScriptBlock {
+        $job = Start-Job -Credential $domainUserCred -ScriptBlock {
             param($scriptPath, $domainUserCred, $AzureStorageConnStr, $PublicDnsName, $PostConfigScript, $CNSize)
 
             . "$scriptPath\HpcPrepareUtil.ps1"
