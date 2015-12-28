@@ -360,45 +360,48 @@ function PrepareHeadNode
                         {
                             $postScriptCmdRet = Invoke-Command -ComputerName $env:COMPUTERNAME -Credential $domainUserCred -ScriptBlock {
                                 param($userCred, $scriptFilePath, $scriptArgs)
-                                # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
-                                $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
-                                $scriptCmd = "'test' | Out-File '$testFileName'; $scriptFilePath $scriptArgs"
-                                $encodedCmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($scriptCmd))
-                                $scriptRetry = 0
-                                while($true)
-                                {
-                                    "$(get-date): Try to start process $scriptRetry : $scriptFilePath $scriptArgs."
-                                    $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $encodedCmd"
-                                    if($pobj.ReturnValue -eq 0)
+                                Start-Job -Credential $userCred -ScriptBlock {
+                                    param($scriptFilePath, $scriptArgs)
+                                    # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
+                                    $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
+                                    $scriptCmd = "'test' | Out-File '$testFileName'; $scriptFilePath $scriptArgs"
+                                    $encodedCmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($scriptCmd))
+                                    $scriptRetry = 0
+                                    while($true)
                                     {
-                                        Start-Sleep -Seconds 5
-                                        if(Test-Path -Path $testFileName)
+                                        "$(get-date): Try to start process $scriptRetry : $scriptFilePath $scriptArgs."
+                                        $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $encodedCmd"
+                                        if($pobj.ReturnValue -eq 0)
                                         {
-                                            Remove-Item -Path $testFileName -Force -ErrorAction Continue
-                                            "$(get-date): Started to run: $scriptFilePath $scriptArgs."
-                                            break
+                                            Start-Sleep -Seconds 5
+                                            if(Test-Path -Path $testFileName)
+                                            {
+                                                Remove-Item -Path $testFileName -Force -ErrorAction Continue
+                                                "$(get-date): Started to run: $scriptFilePath $scriptArgs."
+                                                break
+                                            }
+                                            else
+                                            {
+                                                "$(get-date): The new process failed to run, stop it."
+                                                Stop-Process -Id $pobj.ProcessId
+                                            }
                                         }
                                         else
                                         {
-                                            "$(get-date): The new process failed to run, stop it."
-                                            Stop-Process -Id $pobj.ProcessId
+                                            "$(get-date): Failed to start process: $scriptFilePath $scriptArgs."
+                                        }
+
+                                        if($scriptRetry -lt 10)
+                                        {
+                                            $scriptRetry++
+                                            Start-Sleep -Seconds 10
+                                        }
+                                        else
+                                        {
+                                            throw "Failed to run post configuration script: $scriptFilePath $scriptArgs."
                                         }
                                     }
-                                    else
-                                    {
-                                        "$(get-date): Failed to start process: $scriptFilePath $scriptArgs."
-                                    }
-
-                                    if($scriptRetry -lt 10)
-                                    {
-                                        $scriptRetry++
-                                        Start-Sleep -Seconds 10
-                                    }
-                                    else
-                                    {
-                                        throw "Failed to run post configuration script: $scriptFilePath $scriptArgs."
-                                    }
-                                }
+                                } -ArgumentList @($scriptFilePath, $scriptArgs)
                             } -ArgumentList @($domainUserCred, $scriptFilePath, $scriptArgs)
 
                             TraceInfo "Start to run post config script: "
