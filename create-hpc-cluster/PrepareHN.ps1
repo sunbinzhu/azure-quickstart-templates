@@ -308,13 +308,16 @@ function PrepareHeadNode
                 {
                     $PostConfigScript = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($PostConfigScript))
                     $PostConfigScript = $PostConfigScript.Trim()
-                    $scriptUrl = $PostConfigScript
-                    $scriptArgs = ""
                     $firstSpace = $PostConfigScript.IndexOf(' ')
                     if($firstSpace -gt 0)
                     {
-                        $scriptUrl = $scriptUrl.Substring(0, $firstSpace)
-                        $scriptArgs = $scriptUrl.Substring($firstSpace + 1).Trim()
+                        $scriptUrl = $PostConfigScript.Substring(0, $firstSpace)
+                        $scriptArgs = $PostConfigScript.Substring($firstSpace + 1).Trim()
+                    }
+                    else
+                    {
+                        $scriptUrl = $PostConfigScript
+                        $scriptArgs = ""
                     }
 
                     if(-not [system.uri]::IsWellFormedUriString($scriptUrl,[System.UriKind]::Absolute) -or $scriptUrl -notmatch '.ps1$')
@@ -380,6 +383,11 @@ function PrepareHeadNode
             }
         } -ArgumentList $PSScriptRoot,$domainUserCred,$AzureStorageConnStr,$PublicDnsName,$PostConfigScript,$CNSize
 
+        if(-not $?)
+        {
+            TraceInfo ($Error[0] | Out-String)
+        }
+
         if($domainRole -eq 5)
         {
             if($null -ne (Get-DnsServerForwarder).IPAddress)
@@ -441,6 +449,11 @@ function PrepareHeadNode
 
         Wait-Job $job
         TraceInfo 'Prepare head node job completed'
+        TraceInfo "mainjobstate: $($job.JobStateInfo | out-string)"
+        TraceInfo "output: $($job.ChildJobs[0].Output | out-string)"
+        TraceInfo "jobstate: $($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
+
+        TraceInfo $job.
         Receive-Job $job -Verbose
     }
 }
