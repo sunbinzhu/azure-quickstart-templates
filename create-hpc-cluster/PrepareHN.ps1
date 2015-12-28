@@ -360,7 +360,7 @@ function PrepareHeadNode
                         {
                             $postScriptCmdRet = Invoke-Command -ComputerName $env:COMPUTERNAME -Credential $domainUserCred -ScriptBlock {
                                 param($userCred, $scriptFilePath, $scriptArgs)
-                                Invoke-Command -Credential $userCred -ScriptBlock {
+                                $ret = Invoke-Command -Credential $userCred -ScriptBlock {
                                     param($scriptFilePath, $scriptArgs)
                                     # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
                                     $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
@@ -402,8 +402,19 @@ function PrepareHeadNode
                                         }
                                     }
                                 } -ArgumentList @($scriptFilePath, $scriptArgs)
+                                if(-not $?)
+                                {
+                                    return ($Error[0] | Out-String)
+                                }
+                                else
+                                {
+                                    return ($ret | Out-String)
+                                }
                             } -ArgumentList @($domainUserCred, $scriptFilePath, $scriptArgs)
-
+                            if(-not $?)
+                            {
+                                TraceInfo ("Failed to run:" + ($Error[0] | Out-String))
+                            }
                             TraceInfo "Start to run post config script: "
                             TraceInfo ($postScriptCmdRet | Out-String)
                         }
