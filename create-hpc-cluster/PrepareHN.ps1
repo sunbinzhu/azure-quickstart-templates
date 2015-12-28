@@ -95,7 +95,7 @@ function PrepareHeadNode
     }
     else
     {
-        $job = Start-Job -Credential $domainUserCred -ScriptBlock {
+        $job = Start-Job -ScriptBlock {
             param($scriptPath, $domainUserCred, $AzureStorageConnStr, $PublicDnsName, $PostConfigScript, $CNSize)
 
             . "$scriptPath\HpcPrepareUtil.ps1"
@@ -361,7 +361,11 @@ function PrepareHeadNode
                             TraceInfo "Start to run post config script: $scriptFilePath $scriptArgs."
                             $postScriptErrFile = "$env:windir\Temp\PostConfigScript.err"
                             $postScriptOutFile = "$env:windir\Temp\PostConfigScript.out"
-                            Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs" -NoNewWindow -RedirectStandardError $postScriptErrFile -RedirectStandardOutput $postScriptOutFile
+                            Start-Process -Credential $domainUserCred -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs" -NoNewWindow -RedirectStandardError $postScriptErrFile -RedirectStandardOutput $postScriptOutFile
+                            if(-not $?)
+                            {
+                                TraceInfo ($Error[0] | Out-String)
+                            }
                         }
                     }
                 }
@@ -382,11 +386,6 @@ function PrepareHeadNode
                 throw "Failed to prepare HPC Head Node"
             }
         } -ArgumentList $PSScriptRoot,$domainUserCred,$AzureStorageConnStr,$PublicDnsName,$PostConfigScript,$CNSize
-
-        if(-not $?)
-        {
-            TraceInfo ($Error[0] | Out-String)
-        }
 
         if($domainRole -eq 5)
         {
