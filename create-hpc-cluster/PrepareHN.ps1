@@ -404,6 +404,7 @@ function PrepareHeadNode
                                 } -ArgumentList @($scriptFilePath, $scriptArgs)
                                 
                                 Wait-Job $scriptJob
+                                "scriptjobstate: $($scriptJob.ChildJobs[0].JobStateInfo | fl | Out-String)"
                                 return ($scriptJob.ChildJobs[0].Output | Out-String)
                             } -ArgumentList @($domainUserCred, $scriptFilePath, $scriptArgs)
                             if(-not $?)
@@ -491,8 +492,6 @@ function PrepareHeadNode
         TraceInfo "mainjobstate: $($job.JobStateInfo | out-string)"
         TraceInfo "output: $($job.ChildJobs[0].Output | out-string)"
         TraceInfo "jobstate: $($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
-
-        TraceInfo $job.
         Receive-Job $job -Verbose
     }
 }
