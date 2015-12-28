@@ -355,15 +355,10 @@ function PrepareHeadNode
 
                         if($downloaded)
                         {
-                            $pobj = Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs"
-                            if($pobj.ReturnValue -eq 0)
-                            {
-                               TraceInfo "Start to run post config script: $scriptFilePath $scriptArgs."
-                            }
-                            else
-                            {
-                                TraceInfo "Failed to run: $scriptFilePath $scriptArgs."
-                            }
+                            TraceInfo "Start to run post config script: $scriptFilePath $scriptArgs."
+                            $postScriptErrFile = "$env:windir\Temp\PostConfigScript.err"
+                            $postScriptOutFile = "$env:windir\Temp\PostConfigScript.out"
+                            Start-Process -FilePath "PowerShell.exe" -ArgumentList "-NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs" -NoNewWindow -RedirectStandardError $postScriptErrFile -RedirectStandardOutput $postScriptOutFile
                         }
                     }
                 }
