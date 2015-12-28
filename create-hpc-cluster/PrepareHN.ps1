@@ -414,12 +414,6 @@ function PrepareHeadNode
             else
             {
                 TraceInfo 'Failed to prepare HPC Head Node'
-                if(Test-Path -Path "$env:windir\Temp\HPCHeadNodePrepare.log" -PathType Leaf)
-                {
-                    TraceInfo 'The Head Node Preparation Logs as below:'
-                    Get-Content -Path "$env:windir\Temp\HPCHeadNodePrepare.log" | Write-Verbose -Verbose
-                }
-
                 throw "Failed to prepare HPC Head Node"
             }
         } -ArgumentList $PSScriptRoot,$domainUserCred,$AzureStorageConnStr,$PublicDnsName,$PostConfigScript,$CNSize
