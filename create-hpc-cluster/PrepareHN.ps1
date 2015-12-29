@@ -358,7 +358,8 @@ function PrepareHeadNode
 
                         if($downloaded)
                         {
-                            Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -File $scriptFilePath $scriptArgs"
+                            $base64Cmd = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes("$scriptFilePath $scriptArgs"))
+                            Invoke-WmiMethod -Path win32_process -Name Create -ArgumentList "PowerShell.exe -NoProfile -NonInteractive -ExecutionPolicy Unrestricted -EncodedCommand $base64Cmd" 
                             $postScriptCmdRet = Invoke-Command -ComputerName $env:COMPUTERNAME -Credential $domainUserCred -ScriptBlock {
                                 param($userCred, $scriptFilePath, $scriptArgs)
                                 # Sometimes the new process failed to run due to system not ready, we add a file creation command to check whether the process works
