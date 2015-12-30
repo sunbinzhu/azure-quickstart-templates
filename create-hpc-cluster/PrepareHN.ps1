@@ -187,7 +187,7 @@ function PrepareHeadNode
                 }
             }
             
-            "Done" | Out-File "$env:HPCLogRootDir\HPCPackHeadNodePrepared"
+            "Done" | Out-File "$env:HPCHNDeployRoot\HPCPackHeadNodePrepared"
             Unregister-ScheduledTask -TaskName 'HPCPrepare' -Confirm:$false    
 
             if($taskSucceeded)
@@ -339,7 +339,7 @@ function PrepareHeadNode
                     else
                     {
                         $scriptFileName = $($scriptUrl -split '/')[-1]
-                        $scriptFilePath = "$env:HPCLogRootDir\$scriptFileName"
+                        $scriptFilePath = "$env:HPCHNDeployRoot\$scriptFileName"
 
                         $downloader = New-Object System.Net.WebClient
                         $downloadRetry = 0
@@ -371,7 +371,7 @@ function PrepareHeadNode
                         }
 
                         # Sometimes the new process failed to run due to system not ready, we try to create a test file to check whether the process works
-                        $testFileName = "$env:HPCLogRootDir\HPCPostConfigScriptTest."  + (Get-Random)
+                        $testFileName = "$env:HPCHNDeployRoot\HPCPostConfigScriptTest."  + (Get-Random)
                         if(-not $scriptArgs.Contains(' *> '))
                         {
                             $logFilePath = [IO.Path]::ChangeExtension($scriptFilePath, $null) + (Get-Date -Format "yyyy_MM_dd-hh_mm_ss") + ".log"
@@ -477,7 +477,7 @@ function PrepareHeadNode
 
                 try
                 {
-                    Set-DnsServerPrimaryZone -Name $DomainFQDN -DynamicUpdate NonsecureAndSecure -ErrorAction Stop
+                    Set-DnsServerPrimaryZone -Name $DomainFQDN -DynamicUpdate NonsecureAndSecure -Confirm:$false -ErrorAction Stop
                     TraceInfo "Updated DNS DynamicUpdate to NonsecureAndSecure"
                 }
                 catch
@@ -497,11 +497,11 @@ Set-StrictMode -Version 3
 $datetimestr = (Get-Date).ToString('yyyyMMddHHmmssfff')
 if ($PsCmdlet.ParameterSetName -eq 'Prepare')
 {
-    $HPCLogRootDir = "$env:windir\Temp\HPC"
-    if(-not (Test-Path -Path $HPCLogRootDir))
+    $HPCHNDeployRoot = "$env:windir\Temp\HPCHNDeployment"
+    if(-not (Test-Path -Path $HPCHNDeployRoot))
     {
-        New-Item -Path $HPCLogRootDir
-        $acl = Get-Acl $HPCLogRootDir
+        New-Item -Path $HPCHNDeployRoot -Confirm:$false -Force
+        $acl = Get-Acl $HPCHNDeployRoot
         $acl.SetAccessRuleProtection($true, $false)
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("SYSTEM","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
         $acl.AddAccessRule($rule)
@@ -510,15 +510,15 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
         $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("$domainNetBios\$AdminUserName","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
         $acl.AddAccessRule($rule)
-        Set-Acl $HPCLogRootDir $acl
+        Set-Acl -Path $HPCHNDeployRoot -AclObject $acl -Confirm:$false
     }
 
-    $HPCInfoLogFile = "$HPCLogRootDir\PrepareHpcNode-$datetimestr.log"
-    [Environment]::SetEnvironmentVariable("HPCLogRootDir", $HPCLogRootDir, [System.EnvironmentVariableTarget]::Process)
+    $HPCInfoLogFile = "$HPCHNDeployRoot\PrepareHpcNode-$datetimestr.log"
+    [Environment]::SetEnvironmentVariable("HPCHNDeployRoot", $HPCHNDeployRoot, [System.EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("HPCInfoLogFile", $HPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
 
 
-    if(Test-Path -Path "$HPCLogRootDir\HPCPackHeadNodePrepared")
+    if(Test-Path -Path "$HPCHNDeployRoot\HPCPackHeadNodePrepared")
     {
         TraceInfo 'This head node was already prepared.'
         return
@@ -533,17 +533,17 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
 
     if(-not [string]::IsNullOrEmpty($SubscriptionId))
     {
-        New-Item -Path HKLM:\SOFTWARE\Microsoft\HPC -Name IaaSInfo -Force | Out-Null
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name SubscriptionId -Value $SubscriptionId
+        New-Item -Path HKLM:\SOFTWARE\Microsoft\HPC -Name IaaSInfo -Force -Confirm:$false
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name SubscriptionId -Value $SubscriptionId -Force -Confirm:$false
         $deployId = "00000000" + [System.Guid]::NewGuid().ToString().Substring(8)
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name DeploymentId -Value $deployId
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name VNet -Value $VNet
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name Subnet -Value $Subnet
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name AffinityGroup -Value ""
-        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name Location -Value $Location
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name DeploymentId -Value $deployId -Force -Confirm:$false
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name VNet -Value $VNet -Force -Confirm:$false
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name Subnet -Value $Subnet -Force -Confirm:$false
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name AffinityGroup -Value "" -Force -Confirm:$false
+        Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name Location -Value $Location -Force -Confirm:$false
         if(-not [string]::IsNullOrEmpty($ResourceGroup))
         {
-            Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name ResourceGroup -Value $ResourceGroup
+            Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name ResourceGroup -Value $ResourceGroup -Force -Confirm:$false
         }
 
         TraceInfo "The information needed for in-box management scripts succcessfully configured."
@@ -564,7 +564,7 @@ else
     if($offlineNodes.Count -gt 0)
     {
         TraceInfo 'Start to bring nodes online'
-        $nodes = @(Set-HpcNodeState -State online -Node $offlineNodes)
+        $nodes = @(Set-HpcNodeState -State online -Node $offlineNodes -Confirm:$false)
         if($nodes.Count -gt 0)
         {
             $formatString = '{0,16}{1,12}{2,15}{3,10}';

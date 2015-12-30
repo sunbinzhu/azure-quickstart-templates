@@ -456,8 +456,7 @@
         "settings": {
           "fileUris": [
             "[concat(parameters('artifactsBaseUrl'), '/PrepareHN.ps1')]",
-            "[concat(parameters('artifactsBaseUrl'), '/HPCHNPrepare.ps1')]",
-            "[concat(parameters('artifactsBaseUrl'), '/HpcPrepareUtil.ps1')]"
+            "[concat(parameters('artifactsBaseUrl'), '/HPCHNPrepare.ps1')]"
           ],
           "commandToExecute": "[concat(variables('headNodeCommandStr'), ' -AzureStorageConnStr \"', variables('hnStorageConnStrPrefix'), listKeys(variables('hnStorageAccountId'),variables('apiVersion')).key1, '\" -PublicDnsName ', reference('setupClusterPublicIP').outputs.fqdn.value)]"
         }
