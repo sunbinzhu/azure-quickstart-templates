@@ -500,7 +500,7 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
     $HPCHNDeployRoot = "$env:windir\Temp\HPCHNDeployment"
     if(-not (Test-Path -Path $HPCHNDeployRoot))
     {
-        New-Item -Path $HPCHNDeployRoot -Confirm:$false -Force
+        New-Item -Path $HPCHNDeployRoot -ItemType directory -Confirm:$false -Force
         $acl = Get-Acl $HPCHNDeployRoot
         $acl.SetAccessRuleProtection($true, $false)
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("SYSTEM","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
@@ -508,8 +508,15 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
         $acl.AddAccessRule($rule)
         $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
-        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("$domainNetBios\$AdminUserName","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
-        $acl.AddAccessRule($rule)
+        try
+        {
+            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("$domainNetBios\$AdminUserName","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
+            $acl.AddAccessRule($rule)
+        }
+        catch
+        {
+            TraceInfo "Failed to grant access permissions to user '$domainNetBios\$AdminUserName'"
+        }
         Set-Acl -Path $HPCHNDeployRoot -AclObject $acl -Confirm:$false
     }
 
