@@ -45,8 +45,16 @@
     [switch] $NodeStateCheck
 )
 
-. "$PSScriptRoot\HpcPrepareUtil.ps1"
+function TraceInfo
+{
+    param
+    (
+    [Parameter(Mandatory=$false)]
+    [String] $log = ""
+    )
 
+    "$(Get-Date -format 'MM/dd/yyyy HH:mm:ss') $log" | Out-File -Confirm:$false -FilePath $env:HPCInfoLogFile -Append -ErrorAction Continue
+}
 
 function PrepareHeadNode
 {
@@ -98,13 +106,17 @@ function PrepareHeadNode
         $job = Start-Job -ScriptBlock {
             param($scriptPath, $domainUserCred, $AzureStorageConnStr, $PublicDnsName, $PostConfigScript, $CNSize)
 
-            . "$scriptPath\HpcPrepareUtil.ps1"
+            function TraceInfo($log)
+            {
+                "$(Get-Date -format 'MM/dd/yyyy HH:mm:ss') $log" | Out-File -Confirm:$false -FilePath $env:HPCInfoLogFile -Append -ErrorAction Continue
+            }
+
             TraceInfo 'register HPC Head Node Preparation Task'
             # prepare headnode
             $dbArgs = '-DBServerInstance .\COMPUTECLUSTER'
             $HNPreparePsFile = "$scriptPath\HPCHNPrepare.ps1"
             $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HNPreparePsFile' $dbArgs`""
-            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest *>$script:PrepareNodeLogFile
+            Register-ScheduledTask -TaskName 'HPCPrepare' -Action $action -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest
             if(-not $?)
             {
                 TraceInfo 'Failed to schedule HPC Head Node Preparation Task'
@@ -175,7 +187,7 @@ function PrepareHeadNode
                 }
             }
             
-            "Done" | Out-File "$env:windir\Temp\HPCPackHeadNodePrepared"
+            "Done" | Out-File "$env:HPCLogRootDir\HPCPackHeadNodePrepared"
             Unregister-ScheduledTask -TaskName 'HPCPrepare' -Confirm:$false    
 
             if($taskSucceeded)
@@ -214,7 +226,7 @@ function PrepareHeadNode
 
 	            # set node naming series
                 $nodenaming = 'AzureVMCN-%0000%'
-                ExecuteCommandWithRetry -Command "Set-HpcClusterProperty -NodeNamingSeries $nodenaming"
+                Set-HpcClusterProperty -NodeNamingSeries $nodenaming
                 TraceInfo "Node naming series set to $nodenaming"
         
                 # Create a default compute node template
@@ -327,7 +339,7 @@ function PrepareHeadNode
                     else
                     {
                         $scriptFileName = $($scriptUrl -split '/')[-1]
-                        $scriptFilePath = "$env:windir\Temp\$scriptFileName"
+                        $scriptFilePath = "$env:HPCLogRootDir\$scriptFileName"
 
                         $downloader = New-Object System.Net.WebClient
                         $downloadRetry = 0
@@ -359,7 +371,7 @@ function PrepareHeadNode
                         }
 
                         # Sometimes the new process failed to run due to system not ready, we try to create a test file to check whether the process works
-                        $testFileName = "$env:windir\Temp\HPCPostConfigScriptTest."  + (Get-Random)
+                        $testFileName = "$env:HPCLogRootDir\HPCPostConfigScriptTest."  + (Get-Random)
                         if(-not $scriptArgs.Contains(' *> '))
                         {
                             $logFilePath = [IO.Path]::ChangeExtension($scriptFilePath, $null) + (Get-Date -Format "yyyy_MM_dd-hh_mm_ss") + ".log"
@@ -476,34 +488,37 @@ function PrepareHeadNode
         }
 
         Wait-Job $job
-        TraceInfo "PrepareHeadNode Job State:$($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
-        TraceInfo "PrepareHeadNode Job output: $($job.ChildJobs[0].Output | out-string)"
+        TraceInfo "PrepareHeadNode Job State: $($job.ChildJobs[0].JobStateInfo | fl | Out-String)"
         Receive-Job $job -Verbose
     }
 }
 
-function NodeStateCheck
-{
-    Add-PSSnapin Microsoft.HPC
-
-    $datetimestr = (Get-Date).ToString('yyyyMMdd')
-    $script:PrepareNodeLogFile = "$env:windir\Temp\HpcNodeCheckLog-$datetimestr.txt"
-
-    $offlineNodes = @()
-    $offlineNodes += Get-HpcNode -State Offline -ErrorAction SilentlyContinue
-    if($offlineNodes.Count -gt 0)
-    {
-        TraceInfo 'Start to bring nodes online'
-        $result = @()
-        $result += Set-HpcNodeState -State online -Node $offlineNodes
-        PrintNodes $result
-    }
-}
-
 Set-StrictMode -Version 3
+$datetimestr = (Get-Date).ToString('yyyyMMddHHmmssfff')
 if ($PsCmdlet.ParameterSetName -eq 'Prepare')
 {
-    if(Test-Path -Path "$env:windir\Temp\HPCPackHeadNodePrepared")
+    $HPCLogRootDir = "$env:windir\Temp\HPC"
+    if(-not (Test-Path -Path $HPCLogRootDir))
+    {
+        New-Item -Path $HPCLogRootDir
+        $acl = Get-Acl $HPCLogRootDir
+        $acl.SetAccessRuleProtection($true, $false)
+        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("SYSTEM","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
+        $acl.AddAccessRule($rule)
+        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
+        $acl.AddAccessRule($rule)
+        $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
+        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("$domainNetBios\$AdminUserName","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
+        $acl.AddAccessRule($rule)
+        Set-Acl $HPCLogRootDir $acl
+    }
+
+    $HPCInfoLogFile = "$HPCLogRootDir\PrepareHpcNode-$datetimestr.log"
+    [Environment]::SetEnvironmentVariable("HPCLogRootDir", $HPCLogRootDir, [System.EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("HPCInfoLogFile", $HPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
+
+
+    if(Test-Path -Path "$HPCLogRootDir\HPCPackHeadNodePrepared")
     {
         TraceInfo 'This head node was already prepared.'
         return
@@ -530,6 +545,7 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
         {
             Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\HPC\IaaSInfo -Name ResourceGroup -Value $ResourceGroup
         }
+
         TraceInfo "The information needed for in-box management scripts succcessfully configured."
     }
 
@@ -539,5 +555,25 @@ if ($PsCmdlet.ParameterSetName -eq 'Prepare')
 }
 else
 {
-    NodeStateCheck
+    Add-PSSnapin Microsoft.HPC
+
+    $HPCInfoLogFile = "$env:windir\Temp\HpcNodeAutoBringOnline.log"
+    [Environment]::SetEnvironmentVariable("HPCInfoLogFile", $HPCInfoLogFile, [System.EnvironmentVariableTarget]::Process)
+    $offlineNodes = @()
+    $offlineNodes += Get-HpcNode -State Offline -ErrorAction SilentlyContinue
+    if($offlineNodes.Count -gt 0)
+    {
+        TraceInfo 'Start to bring nodes online'
+        $nodes = @(Set-HpcNodeState -State online -Node $offlineNodes)
+        if($nodes.Count -gt 0)
+        {
+            $formatString = '{0,16}{1,12}{2,15}{3,10}';
+            TraceInfo ($formatString -f 'NetBiosName','NodeState','NodeHealth','Groups')
+            TraceInfo ($formatString -f '-----------','---------','----------','------')
+            foreach($node in $nodes)
+            {
+                TraceInfo ($formatString -f $node.NetBiosName,$node.NodeState,$node.NodeHealth,$node.Groups)
+            }
+        }
+    }
 }
