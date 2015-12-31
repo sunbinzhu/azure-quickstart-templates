@@ -91,7 +91,7 @@ if ($PsCmdlet.ParameterSetName -eq 'NodeState')
 }
 else
 {
-    $HPCHNDeployRoot = [IO.Path]::Combine($env:CCP_Data, "Logs\HPCHNDeployment")
+    $HPCHNDeployRoot = [IO.Path]::Combine($env:CCP_Data, "LogFiles\HPCHNDeployment")
     $HPCInfoLogFile = "$HPCHNDeployRoot\ConfigHeadNode-$datetimestr.log"
     $configFlagFile = "$HPCHNDeployRoot\HPCPackHeadNodeConfigured.flag"
     $postScriptFlagFile = "$HPCHNDeployRoot\PostConfigScriptExecution.flag"
@@ -125,7 +125,7 @@ else
     TraceInfo "Configuring head node: -DomainFQDN $DomainFQDN -PublicDnsName $PublicDnsName -AdminUserName $AdminUserName -CNSize $CNSize -UnsecureDNSUpdate:$UnsecureDNSUpdate -PostConfigScript $PostConfigScript"
     if(Test-Path -Path $configFlagFile)
     {
-        TraceInfo 'This head node is was already configured'
+        TraceInfo 'This head node was already configured'
     }
     else
     {
@@ -353,8 +353,6 @@ else
                      TraceInfo "Set cluster environment CCP_MPI_NETMASK to $mpiNetMask"
                  }
 
-             
-                "Done" | Out-File "$env:HPCHNDeployRoot\HPCPackHeadNodePrepared" -Confirm:$false -Force
                  # register scheduler task to bring node online
                  $task = Get-ScheduledTask -TaskName 'HpcNodeOnlineCheck' -ErrorAction SilentlyContinue
                  if($null -eq $task)
@@ -468,7 +466,7 @@ else
 
     if([String]::IsNullOrWhiteSpace($PostConfigScript))
     {
-        TraceInfo "No Post configuration script specified."
+        TraceInfo "No Post configuration script is specified."
     }
     else
     {
@@ -476,7 +474,7 @@ else
         $PostConfigScript = $PostConfigScript.Trim()
         if((Test-Path $postScriptFlagFile) -and ($PostConfigScript -eq (Get-Content $postScriptFlagFile | select -First 1)))
         {
-            TraceInfo "The script has already been executed"
+            TraceInfo "The Post configuration script was already executed"
         }
         else
         {

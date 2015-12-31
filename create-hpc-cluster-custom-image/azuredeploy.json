@@ -146,14 +146,14 @@
     },
     "headNodePostConfigScript": {
       "type": "string",
-      "defaultValue": " ",
+      "defaultValue": "",
       "metadata": {
         "description": "Optional URL of a public available PowerShell script you want to run on the head node after it is configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
       }
     },
     "computeNodePostConfigScript": {
       "type": "string",
-      "defaultValue": " ",
+      "defaultValue": "",
       "metadata": {
         "description": "Optional URL of a public available PowerShell script you want to run on the compute nodes after they are configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
       }
@@ -199,9 +199,8 @@
     "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=UserCustomedImage\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "adminBase64Password": "[base64(parameters('adminPassword'))]",
     "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', variables('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', variables('location'), '\"')]",
-    "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(parameters('headNodePostConfigScript')), '\" ', variables('iaasInfoArg'))]",
+    "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(trim(parameters('headNodePostConfigScript'))), '\" ', variables('iaasInfoArg'))]",
     "hnStorageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('hnStorageAccountName'), ';AccountKey=')]",
-    "computeNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareCN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -ClusterName ', parameters('clusterName'),' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), ' -PostConfigScript \"', parameters('computeNodePostConfigScript'), '\" -FromCustomImage')]",
     "stripUniqueFileName": "[concat(uniqueString(resourceGroup().id), '.json')]",
     "artifactsBaseUrl": "[replace(uri(deployment().properties.templateLink.uri, variables('stripUniqueFileName')), concat('/', variables('stripUniqueFileName')),'')]",
     "sharedResxBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
@@ -497,7 +496,7 @@
             "value": "[parameters('privateDomainName')]"
           },
           "computeNodePostConfigScript": {
-            "value": "[parameters('computeNodePostConfigScript')]"
+            "value": "[trim(parameters('computeNodePostConfigScript'))]"
           }
         }
       }
