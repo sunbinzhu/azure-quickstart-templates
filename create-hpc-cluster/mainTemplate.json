@@ -162,14 +162,14 @@
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "Optional URL of a public available PowerShell script you want to run on the head node after it is configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
+        "description": "Optional URL of a public available PowerShell script you want to run on the head node after it is configured. The script will be run as the Local System account. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
       }
     },
     "computeNodePostConfigScript": {
       "type": "string",
       "defaultValue": "",
       "metadata": {
-        "description": "Optional URL of a public available PowerShell script you want to run on the compute nodes after they are configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
+        "description": "Optional URL of a public available PowerShell script you want to run on the compute nodes after they are configured. The script will be run as the Local System account. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'."
       }
     },
     "artifactsBaseUrl": {
