@@ -94,7 +94,7 @@
     }
   },
   "variables":{
-    "osDiskUri": "[uri(parameters('sourceImageVhdUri'), concat(parameters('vmName'), '-', uniqueString(parameters('subnetId'), toLower(parameters('vmName'))), '.vhd'))]"
+    "osDiskUri": "[uri(parameters('sourceImageVhdUri'), concat(toLower(parameters('vmName')), '-', uniqueString(parameters('subnetId'), toLower(parameters('vmName'))), '.vhd'))]"
   },
   "resources": [
     {
