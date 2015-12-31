@@ -160,7 +160,7 @@
   },
   "variables": {
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
-    "storageAccountNamePrefix": "[toLower(concat('hpc', uniqueString(resourceGroup().id, parameters('clusterName'))))]",
+    "storageAccountNamePrefix": "[toLower(concat('hpc', uniqueString(resourceGroup().id, toLower(parameters('clusterName')))))]",
     "storageAccountType": "Standard_LRS",
     "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-HN')]",
     "computeNodeImageOsPlatform": "Linux",

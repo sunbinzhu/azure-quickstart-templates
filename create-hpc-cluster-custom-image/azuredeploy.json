@@ -162,7 +162,7 @@
   "variables": {
     "apiVersion": "2015-06-15",
     "location": "[resourceGroup().location]",
-    "storageAccountNamePrefix": "[toLower(concat('hpc', uniqueString(resourceGroup().id, parameters('clusterName'))))]",
+    "storageAccountNamePrefix": "[toLower(concat('hpc', uniqueString(resourceGroup().id, toLower(parameters('clusterName')))))]",
     "hnStorageAccountName": "[concat(variables('storageAccountNamePrefix'), '0')]",
     "hnStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',variables('hnStorageAccountName'))]",
     "storageAccountType": "Standard_LRS",

@@ -118,6 +118,9 @@
       }    
     }
   },
+  "variables":{
+    "osDiskUri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', parameters('vmName'), '-os', uniqueString(parameters('subnetId')), '.vhd')]"
+  },
   "resources": [
     {
       "apiVersion": "[parameters('apiVersion')]",
@@ -169,7 +172,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-osdisk.vhd')]"
+              "uri": "[variables('osDiskUri')]"
             },
             "caching": "ReadOnly",
             "createOption": "FromImage"
