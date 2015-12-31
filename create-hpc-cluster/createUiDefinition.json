@@ -237,6 +237,18 @@
                 }
               ]
             }
+          },
+          {
+            "name": "computeNodePostConfigScript",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Post-configuration script URL",
+            "toolTip": "Optional URL of a public available PowerShell script you want to run on the compute nodes after they are configured. The script will be run as the Local System account. You can also specify arguments for the script, for example 'http://www.contoso.com/mycnpostscript.ps1 -Arg1 arg1 -Arg2 arg2'.",
+            "defaultValue": "",
+            "constraints": {
+              "required": false,
+              "regex": "^\\s*(https?://.+/[^/]+\\.ps1(\\s+\\S*)*)?$",
+              "validationMessage": "Must be HTTP or HTTPS URL and only PowerShell script is supported."
+            }
           }
         ]
       },
@@ -347,7 +359,8 @@
       "computeNodeImageSku": "[steps('computeNodeConfig').computeNodeImage.sku]",
       "computeNodeNamePrefix": "[steps('computeNodeConfig').computeNodeNamePrefix]",
       "computeNodeNumber": "[steps('computeNodeConfig').computeNodeNumber]",
-      "computeNodeVMSize": "[steps('computeNodeConfig').computeNodeVMSize]"
+      "computeNodeVMSize": "[steps('computeNodeConfig').computeNodeVMSize]",
+      "computeNodePostConfigScript": "[steps('computeNodeConfig').computeNodePostConfigScript]"
     }
   }
 }
