@@ -175,7 +175,7 @@
     "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
     "subnetRef": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
     "publicIPAddressType": "Dynamic",
-    "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-AVSet')]",
+    "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-avset')]",
     "nbrVMPerAvailabilitySet": 50,
     "availabilitySetNumber": "[add(div(parameters('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
     "nicNameSuffix": "[concat('-nic', uniqueString(variables('subnetRef')))]",
