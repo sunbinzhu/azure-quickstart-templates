@@ -279,7 +279,7 @@
   "outputs": {
     "clusterDnsName": {
       "type": "string",
-      "value": "[reference('mainTemplate').outputs.clusterDNSName]"
+      "value": "[reference('mainTemplate').outputs.clusterDNSName.value]"
     }
   }
 }

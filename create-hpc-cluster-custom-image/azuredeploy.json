@@ -178,9 +178,8 @@
     "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-AVSet')]",
     "nbrVMPerAvailabilitySet": 50,
     "availabilitySetNumber": "[add(div(parameters('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
-    "dnsName": "[concat(parameters('clusterName'), 'ep')]",
-    "nicName": "[concat(parameters('clusterName'),'-nic')]",
-    "nicNameHN": "[concat(variables('nicName'),'-hn')]",
+    "nicNameSuffix": "[concat('-nic', uniqueString(variables('subnetRef')))]",
+    "nicNameHN": "[concat(parameters('clusterName'), variables('nicNameSuffix'))]",
     "vmSizeSuffix": "[uniqueString(resourceGroup().id)]",
     "suffixA8Size": "[concat('Standard_A8', variables('vmSizeSuffix'))]",
     "suffixA9Size": "[concat('Standard_A9', variables('vmSizeSuffix'))]",
@@ -460,7 +459,7 @@
             "value": "[variables('location')]"
           },
           "nicName": {
-            "value": "[concat(variables('nicName'), padLeft(string(copyIndex()), 3, '0'))]"
+            "value": "[concat(parameters('computeNodeNamePrefix'), padLeft(string(copyIndex()), 3, '0'), variables('nicNameSuffix'))]"
           },
           "subnetId": {
             "value": "[variables('subnetRef')]"
