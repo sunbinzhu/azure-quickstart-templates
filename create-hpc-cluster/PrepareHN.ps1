@@ -490,7 +490,7 @@ else
                 $scriptArgs = ""
             }
 
-            if(-not [system.uri]::IsWellFormedUriString($scriptUrl,[System.UriKind]::Absolute) -or $scriptUrl -notmatch '[^/]/[^/]+.ps1$')
+            if(-not [system.uri]::IsWellFormedUriString($scriptUrl,[System.UriKind]::Absolute) -or $scriptUrl -notmatch '[^/]/[^/]+\.ps1$')
             {
                 TraceInfo "Invalid url or not PowerShell script: $scriptUrl"
                 throw "Invalid url or not PowerShell script: $scriptUrl"
