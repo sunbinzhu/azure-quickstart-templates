@@ -106,11 +106,11 @@
             "name": "headNodePostConfigScript",
             "type": "Microsoft.Common.TextBox",
             "label": "Post-configuration script URL",
-            "toolTip": "Optional URL of a public available PowerShell script you want to run on the head node after it is configured. You can also specify arguments for the script, for example 'http://www.consto.com/mypostscript.ps1 -Arg1 arg1 -Arg2 arg2'.",
+            "toolTip": "Optional URL of a public available PowerShell script you want to run on the head node after it is configured. The script will be run as the Local System account. You can also specify arguments for the script, for example 'http://www.contoso.com/myhnpostscript.ps1 -Arg1 arg1 -Arg2 arg2'.",
             "defaultValue": "",
             "constraints": {
               "required": false,
-              "regex": "^\\s*(https?://.+\\.ps1(\\s+\\S*)*)?$",
+              "regex": "^\\s*(https?://.+/[^/]+\\.ps1(\\s+\\S*)*)?$",
               "validationMessage": "Must be HTTP or HTTPS URL and only PowerShell script is supported."
             }
           }
