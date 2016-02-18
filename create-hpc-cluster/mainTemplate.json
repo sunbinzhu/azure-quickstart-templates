@@ -184,7 +184,7 @@
     "apiVersion": "2015-06-15",
     "computeNodeNumber": "[int(parameters('computeNodeNumber'))]",
     "nbrCNPerVMSS": 100,
-    "vmScaleSetNumber": "[add(div(sub(variables('computeNodeNumber'), 1), variables('nbrCNPerVMScaleSet')), 1)]"
+    "vmScaleSetNumber": "[add(div(sub(variables('computeNodeNumber'), 1), variables('nbrCNPerVMSS')), 1)]",
     "cnStorageAccountNumber": "[mul(variables('vmScaleSetNumber'), 5)]",
     "cnStorageAccountStartIndex": "[add(parameters('storageAccountStartIndex'), 1)]",
     "storageAccountIndexWidth": "[length(string(sub(add(variables('cnStorageAccountNumber'), variables('cnStorageAccountStartIndex')), 1)))]",
@@ -513,7 +513,7 @@
             "value": "[concat(parameters('computeNodeNamePrefix'), string(copyIndex()))]"
           },
           "vmNumber": {
-            "value": "[sub(variables('nbrCNPerVMSS'), mul(div(add(copyIndex(), 1), variables('vmScaleSetNumber')), sub(mul(variables('vmScaleSetNumber'), variables('nbrCNPerVMSS')), variables('computeNodeNumber'))]"
+            "value": "[sub(variables('nbrCNPerVMSS'), mul(div(add(copyIndex(), 1), variables('vmScaleSetNumber')), sub(mul(variables('vmScaleSetNumber'), variables('nbrCNPerVMSS')), variables('computeNodeNumber'))))]"
           },
           "vmSize": {
             "value": "[parameters('computeNodeVMSize')]"
