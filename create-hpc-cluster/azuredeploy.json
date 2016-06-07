@@ -189,7 +189,7 @@
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
-    "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster"
+    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
   },
   "resources": [
     {

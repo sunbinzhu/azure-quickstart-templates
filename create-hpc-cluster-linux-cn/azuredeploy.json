@@ -65,6 +65,8 @@
       "allowedValues": [
         "CentOS_6.6",
         "CentOS_7.0",
+        "CentOS_HPC_6.5",
+        "CentOS_HPC_7.1",
         "SLES_12",
         "SLES_Premium_12",
         "SLES_HPC_12",
@@ -183,6 +185,16 @@
         "offer": "CentOS",
         "sku": "7.0"
       },
+      "CentOS_HPC_6.5": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS-HPC",
+        "sku": "6.5"
+      },
+      "CentOS_HPC_7.1": {
+        "publisher": "OpenLogic",
+        "offer": "CentOS-HPC",
+        "sku": "7.1"
+      },
       "SLES_12": {
         "publisher": "SUSE",
         "offer": "SLES",
@@ -220,7 +232,7 @@
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
-    "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster"
+    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
   },
   "resources": [
     {

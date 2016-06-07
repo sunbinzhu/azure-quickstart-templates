@@ -205,8 +205,8 @@
     "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', variables('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\"')]",
     "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(trim(parameters('headNodePostConfigScript'))), '\" ', variables('iaasInfoArg'))]",
     "hnStorageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('hnStorageAccountName'), ';AccountKey=')]",
-    "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster-custom-image",
-    "sharedResxBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster"
+    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster-custom-image",
+    "sharedResxBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/DscWay/create-hpc-cluster"
   },
   "resources": [
     {
