@@ -2,12 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location": {
-      "type": "string",
-      "metadata": {
-        "description": "The region to deploy the resources into"
-      }
-    },
     "nicName": {
       "type": "string",
       "metadata": {
@@ -27,12 +21,19 @@
       }
     }
   },
+  "variables": {
+    "apiVersion": "2015-01-01",
+    "apiVersionNetworks": "2015-06-15",
+    "apiVersionVirtualMachines": "2015-06-15",
+    "apiVersionVMExtensions": "2015-06-15",
+    "apiVersionStorage": "2015-06-15"
+  },
   "resources": [
     {
       "name": "[parameters('nicName')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
-      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "properties": {
         "ipConfigurations": "[parameters('ipConfigurations')]",
         "dnsSettings": {

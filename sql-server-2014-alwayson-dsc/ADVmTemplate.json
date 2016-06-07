@@ -65,42 +65,18 @@
       ],
       "metadata": {
         "description": "The type of the Storage Account created"
-      },
-      "defaultValue": "Standard_LRS"
+      }
     },
     "adminUsername": {
       "type": "string",
       "metadata": {
         "description": "The name of the Administrator of the new VMs and Domain"
-      },
-      "defaultValue": "sqlAdministrator"
+      }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the Administrator account of the new VMs and Domain"
-      }
-    },
-
-    "location": {
-      "type": "string",
-      "allowedValues": [
-        "West US",
-        "East US",
-        "East US 2",
-        "Central US",
-        "South Central US",
-        "North Central US",
-        "North Europe",
-        "West Europe",
-        "East Asia",
-        "Southeast Asia",
-        "Japan East",
-        "Japan West",
-        "Southeast Asia"
-      ],
-      "metadata": {
-        "description": "The region to deploy the resources into"
       }
     },
 
@@ -126,8 +102,7 @@
       ],
       "metadata": {
         "description": "The size of the AD VMs Created"
-      },
-      "defaultValue": "Standard_D1"
+      }
     },
     "dnsPrefix": {
       "type": "string",
@@ -157,6 +132,11 @@
     }
   },
   "variables": {
+    "apiVersion": "2015-01-01",
+    "apiVersionNetworks": "2015-06-15",
+    "apiVersionVirtualMachines": "2015-06-15",
+    "apiVersionVMExtensions": "2015-06-15",
+    "apiVersionStorage": "2015-06-15",
     "windowsDiskSize": 128,
     "publicLBName": "ADPublicLoadBalancer",
     "publicIPAddressName": "[concat(parameters('availabilitySetName'), 'PublicIp')]",
@@ -175,17 +155,17 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storageAccount')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "apiVersion": "[variables('apiVersionStorage')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "accountType": "[parameters('storageAccountType')]"
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "name": "[variables('publicIPAddressName')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "publicIPAllocationMethod": "Dynamic",
         "dnsSettings": {
@@ -196,14 +176,14 @@
     {
       "type": "Microsoft.Compute/availabilitySets",
       "name": "[parameters('availabilitySetName')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]"
+      "apiVersion": "[variables('apiVersionNetworks')]",
+      "location": "[resourceGroup().location]"
     },
     {
-      "apiVersion": "2015-05-01-preview",
-      "name": "[variables('publiclbName')]",
+      "apiVersion": "[variables('apiVersionNetworks')]",
+      "name": "[variables('publicLBName')]",
       "type": "Microsoft.Network/loadBalancers",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
       ],
@@ -242,11 +222,11 @@
     {
       "name": "[concat(variables('adDNicName'), '0')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/loadBalancers/',variables('publicLBName'))]"
       ],
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -275,11 +255,11 @@
     {
       "name": "[concat(variables('adDNicName'), 1)]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[concat('Microsoft.Network/loadBalancers/',variables('publicLBName'))]"
       ],
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -296,10 +276,10 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionVirtualMachines')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('vmNamePrefix'), copyindex())]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccount'))]",
         "[resourceId('Microsoft.Network/networkInterfaces',concat(variables('adDNicName'), copyindex()))]",

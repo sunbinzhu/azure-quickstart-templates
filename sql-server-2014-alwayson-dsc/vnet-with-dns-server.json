@@ -2,19 +2,6 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "location": {
-      "type": "string",
-      "allowedValues": [
-        "West US",
-        "East US",
-        "West Europe",
-        "East Asia",
-        "Southeast Asia"
-      ],
-      "metadata": {
-        "description": "The region to deploy the resources into"
-      }
-    },
     "virtualNetworkName": {
       "type": "string",
       "metadata": {
@@ -25,8 +12,7 @@
       "type": "string",
       "metadata": {
         "description": "The address range of the VNET in CIDR format"
-      },
-      "defaultValue": "10.0.0.0/16"
+      }
     },
     "subnets": {
       "type": "array",
@@ -41,12 +27,19 @@
       }
     }
   },
+  "variables": {
+    "apiVersion": "2015-01-01",
+    "apiVersionNetworks": "2015-06-15",
+    "apiVersionVirtualMachines": "2015-12-01",
+    "apiVersionVMExtensions": "2015-06-15",
+    "apiVersionStorage": "2015-12-01"
+  },
   "resources": [
     {
       "name": "[parameters('virtualNetworkName')]",
       "type": "Microsoft.Network/virtualNetworks",
-      "location": "[parameters('location')]",
-      "apiVersion": "2014-12-01-preview",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "properties": {
         "addressSpace": {
           "addressPrefixes": [

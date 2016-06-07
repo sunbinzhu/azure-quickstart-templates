@@ -65,42 +65,18 @@
       ],
       "metadata": {
         "description": "The type of the Storage Account created"
-      },
-      "defaultValue": "Standard_LRS"
+      }
     },
     "adminUsername": {
       "type": "string",
       "metadata": {
         "description": "The name of the Administrator of the new VMs and Domain"
-      },
-      "defaultValue": "sqlAdministrator"
+      }
     },
     "adminPassword": {
       "type": "securestring",
       "metadata": {
         "description": "The password for the Administrator account of the new VMs and Domain"
-      }
-    },
-
-    "location": {
-      "type": "string",
-      "allowedValues": [
-        "West US",
-        "East US",
-        "East US 2",
-        "Central US",
-        "South Central US",
-        "North Central US",
-        "North Europe",
-        "West Europe",
-        "East Asia",
-        "Southeast Asia",
-        "Japan East",
-        "Japan West",
-        "Southeast Asia"
-      ],
-      "metadata": {
-        "description": "The region to deploy the resources into"
       }
     },
 
@@ -126,8 +102,7 @@
       ],
       "metadata": {
         "description": "The size of the AD VMs Created"
-      },
-      "defaultValue": "Standard_D1"
+      }
     },
 
     "subnetUri": {
@@ -140,12 +115,17 @@
     "DataDiskSize": {
       "type": "int",
       "metadata": {
-        "description": "The address of Primary AD"
+        "description": "VM Data Disk size in Gb"
       },
       "defaultValue": 128
     }
   },
   "variables": {
+    "apiVersion": "2015-01-01",
+    "apiVersionNetworks": "2015-06-15",
+    "apiVersionVirtualMachines": "2015-06-15",
+    "apiVersionVMExtensions": "2015-06-15",
+    "apiVersionStorage": "2015-06-15",
     "sqlWitnessNicName": "SqlWitnessMachine-Nic-0",
     "vmContainerName": "vhds"
   },
@@ -153,8 +133,8 @@
     {
       "type": "Microsoft.Storage/storageAccounts",
       "name": "[parameters('storageAccount')]",
-      "apiVersion": "2015-05-01-preview",
-      "location": "[parameters('location')]",
+      "apiVersion": "[variables('apiVersionStorage')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "accountType": "[parameters('storageAccountType')]"
       }
@@ -162,10 +142,10 @@
     {
       "name": "[variables('sqlWitnessNicName')]",
       "type": "Microsoft.Network/networkInterfaces",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
       ],
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionNetworks')]",
       "properties": {
         "ipConfigurations": [
           {
@@ -181,10 +161,10 @@
       }
     },
     {
-      "apiVersion": "2015-05-01-preview",
+      "apiVersion": "[variables('apiVersionVirtualMachines')]",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('vmNamePrefix'), '0')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts',parameters('storageAccount'))]",
         "[resourceId('Microsoft.Network/networkInterfaces',variables('sqlWitnessNicName'))]"

@@ -3,27 +3,96 @@
 <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fbosh-setup%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2Fbosh-setup%2Fazuredeploy.json" target="_blank">
+    <img src="http://armviz.io/visualizebutton.png"/>
+</a>
 
-This template allows you to setup cloud foundry development environment. It will create a vm with a dynamic public ip address, a storage account, a virtual network, 2 subnets and 2 reserved public ip addresses.
+This template can help you setup the development environment to deploy [BOSH](http://bosh.io/) and [Cloud Foundry](https://www.cloudfoundry.org/) on Azure.
 
-After the VM is created, you can logon to the VM and see ~/install.log to check whether the installation is finished. 
-After the installation is finished, you can execute "./deploy_bosh.sh" in your home directory to deploy bosh.
+You can follow the guide [**HERE**](https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/blob/master/docs/guidance.md) to deploy Cloud Foundry on Azure.
 
-Below are the parameters that the template expects
+If you have any question about this template or the deployment of Cloud Foundry on Azure, please feel free to give your feedback [**HERE**](https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/issues).
 
-| Name   | Description    |
-|:--- |:---|
-| location | location where the resources will be deployed |
-| newStorageAccountName  | Unique DNS Name for the Storage Account where the Virtual Machine's disks will be placed. |
-| virtualNetworkName | name of the virtual network |
-| subnetNameForBosh | name of the subnet for Bosh |
-| subnetNameForCloudFoundry | name of the subnet for CloudFoundy |
-| vmName | Name of Virtual Machine |
-| vmSize | Size of the Virtual Machine |
-| adminUsername  | Username for the Virtual Machines  |
-| adminPassword  | Password for the Virtual Machine  |
-| enableDNSOnDevbox | A default DNS will be setup in the devbox if it is true |
+We look forward to hearing your feedback and suggestions!
 
-Note:
+```
+Template Changelog
 
-You can set enableDNSOnDevbox true to configure your dev-box as a DNS server for testing quickly. You should reboot the dev-box manually after the DNS is deployed. And if your dev-box reboots, its public IP address may change. You need to manually update it in /etc/bind/cf.com.wan.
+# v1.5.0 (2016-05-23)
+
+- Upgrade versions
+  - Upgrade Azure CPI version to v11. Please see new features in https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release
+- Fix [#1958](https://github.com/Azure/azure-quickstart-templates/issues/1958).
+
+# v1.4.2 (2016-05-06)
+
+- Upgrade versions
+  - Upgrade bosh version to 256.2
+- Remove redis from bosh.yml as of bosh v256+
+
+# v1.4.1 (2016-04-28)
+
+- Add a retry for apt-get update
+- Add https://gems.ruby-china.org/ as a gem source
+
+# v1.4.0 (2016-04-21)
+
+- Add AzureChinaCloud support
+- Upgrade versions
+  - Upgrade Azure CPI version to v10. Please see new features in https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release
+
+# v1.3.0 (2016-04-01)
+- Does not bind network security groups to subnets but bind network security groups to VMs.
+- Upgrade versions
+  - Upgrade Azure CPI version to v9. Please see new features in https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release
+
+# v1.2.0 (2016-03-28)
+- Add a subnet for Diego
+- Create network security groups for all subnets
+- Upgrade versions
+  - Upgrade Azure CPI version to v8. Please see new features in https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release
+
+# v1.1.3 (2016-03-08)
+- Upgrade versions
+  - Upgrade bosh version to 255.3
+  - Upgrade cf version to 231
+
+# v1.1.2 (2016-03-01)
+- Change the default value of "autoDeployBosh" to "enabled"
+- Run "apt-get update" at the beginning of "setup_env"
+
+# v1.1.1 (2016-02-23)
+- Upgrade versions
+  - Upgrade bosh version to 255.1
+
+# v1.1 (2016-02-13)
+- New features
+  - Support deploying Bosh automatically
+- Parameters and Variables
+  - Remove the parameter "newStorageAccountName" and generate it by uniqueString()
+  - Create the dev-box with SSH Keys
+  - Make service principal parameters required and fixed-length
+  - Move the parameter "vmSize" into a variable
+  - Move the parameters about vnet & subnet to variables
+  - Change the CIDR of the subnet for Cloud Foundry to /20
+- Render the manifest of Bosh
+  - Autofill the service principal
+- Render the manifest of Cloud Foundry
+  - Autofill the virtual network name, the subnet name and so on.
+- Upgrade versions
+  - Upgrade bosh_cli version to 1.3169.0
+  - Upgrade bosh-init version to 0.0.81
+  - Upgrade API version to the latest 2015-06-15
+  - Upgrade to Ubuntu Server 14.04.3 LTS
+  - Upgrade the default "storageAccountType" into Standard_RAGRS
+  - Upgrade the version of CustomScript Extension to 1.4
+    - Download the scripts and manifests via fileUris
+    - Put commandToExecute into protectedSettings to protect users' credentials
+- Add CI pipeline to test bosh-setup deployment
+
+# v1.0 (2015-11-02) - GA Version
+
+# Preview II Version (2015-08-25)
+
+# Preview Version (2015-05-29)
+```

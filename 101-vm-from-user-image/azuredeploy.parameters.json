@@ -6,22 +6,19 @@
       "value": "username"
     },
     "adminPassword": {
-      "value": "password!"
+      "value": "GEN-UNIQUE"
     },
     "userImageStorageAccountName": {
       "value": "myStorageAccount"
     },
-    "userImageStorageContainerName": {
-      "value": "myContainerName"
+    "osDiskVhdUri": {
+      "value": "http://ci21c7135add2.blob.core.windows.net/vhds/cid4b28112a1.vhd"
     },
-    "userImageVhdName": {
-      "value": "sample.vhd"
-    },
-    "dnsNameForPublicIP": {
-      "value": "uniqueDNS"
+    "dnsLabelPrefix": {
+      "value": "GEN-UNIQUE"
     },
     "osType": {
-      "value": "linux"
+      "value": "Linux"
     },
     "vmSize": {
       "value": "Standard_D2"
