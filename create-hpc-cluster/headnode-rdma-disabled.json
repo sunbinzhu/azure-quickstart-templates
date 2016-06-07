@@ -133,7 +133,7 @@
                 "url": "[concat(parameters('scriptBaseUri'),'/CreateADPDC.ps1.zip')]",
                 "script": "CreateADPDC.ps1",
                 "function": "CreateADPDC"              
-              }
+              },
               "configurationArguments": {
                 "DomainName": "[parameters('privateDomainName')]"
               }

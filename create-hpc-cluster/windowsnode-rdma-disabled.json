@@ -199,7 +199,7 @@
                 "url": "[concat(parameters('scriptBaseUri'),'/ConfigComputeNode.ps1.zip')]",
                 "script": "ConfigComputeNode.ps1",
                 "function": "ConfigComputeNode"              
-              }
+              },
               "configurationArguments": {
                 "DomainName": "[parameters('privateDomainName')]",
                 "PostConfigScript": "[parameters('computeNodePostConfigScript')]"
