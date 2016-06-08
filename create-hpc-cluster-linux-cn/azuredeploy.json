@@ -66,7 +66,6 @@
         "CentOS_6.5",
         "CentOS_6.6",
         "CentOS_6.7",
-        "CentOS_6.8",
         "CentOS_7.0",
         "CentOS_7.1",
         "CentOS_7.2",
@@ -76,10 +75,11 @@
         "SLES_12_Premium",
         "SLES_12_HPC",
         "SLES_12_HPC_Premium",
-        "Ubuntu_14.04",
         "RHEL_6.7",
         "RHEL_6.8",
-        "RHEL_7.2"
+        "RHEL_7.2",
+        "Ubuntu_14.04",
+        "Ubuntu_16.04"
       ],
       "metadata": {
         "description": "The VM image of the compute nodes"
@@ -196,11 +196,6 @@
         "offer": "CentOS",
         "sku": "6.7"
       },
-      "CentOS_6.8": {
-        "publisher": "OpenLogic",
-        "offer": "CentOS",
-        "sku": "6.8"
-      },
       "CentOS_7.0": {
         "publisher": "OpenLogic",
         "offer": "CentOS",
@@ -246,11 +241,6 @@
         "offer": "SLES-HPC-Priority",
         "sku": "12"
       },
-      "Ubuntu_14.04": {
-        "publisher": "Canonical",
-        "offer": "UbuntuServer",
-        "sku": "14.04.3-LTS"
-      },
       "RHEL_6.7": {
         "publisher": "RedHat",
         "offer": "RHEL",
@@ -265,6 +255,16 @@
         "publisher": "RedHat",
         "offer": "RHEL",
         "sku": "7.2"
+      },
+      "Ubuntu_14.04": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "14.04.3-LTS"
+      },
+      "Ubuntu_16.04": {
+        "publisher": "Canonical",
+        "offer": "UbuntuServer",
+        "sku": "16.04.0-LTS"
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
