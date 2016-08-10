@@ -2,9 +2,6 @@
     "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "location": {
-            "value": "West US"
-        },
         "storageAccountType": {
             "value": "Premium_LRS"
         },
@@ -41,14 +38,14 @@
         "storageAccountNamePrefix": {
             "value": "GEN-UNIQUE"
         },
-        "adVMSize": {
-            "value": "Standard_D1"
+         "adVMSize": {
+            "value": "Standard_DS1"
         },
         "sqlVMSize": {
-            "value": "Standard_D3"
+            "value": "Standard_DS3"
         },
         "spVMSize": {
-            "value": "Standard_D3"
+            "value": "Standard_DS3"
         }
     }
 }
