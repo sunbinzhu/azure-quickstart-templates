@@ -668,9 +668,6 @@
           "availabilitySetName": {
             "value": "[concat(variables('availabilitySetNamePrefix'), padLeft(string(div(add(copyIndex(), 1), variables('nbrVMPerAvailabilitySet'))), 3, '0'))]"
           },
-          "scriptBaseUri": {
-            "value": "[parameters('artifactsBaseUrl')]"
-          },
           "clusterName": {
             "value": "[parameters('clusterName')]"
           },
