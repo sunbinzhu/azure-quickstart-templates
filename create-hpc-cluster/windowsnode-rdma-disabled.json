@@ -157,7 +157,7 @@
               "Options": "3"
             },
             "protectedSettings": {
-              "Password": "adminPassword"
+              "Password": "[parameters('adminPassword')]"
             }
           }
         }

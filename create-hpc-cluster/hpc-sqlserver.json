@@ -154,7 +154,6 @@
             "typeHandlerVersion": "2.19",
             "autoUpgradeMinorVersion": true,
             "settings": {
-              "wmfVersion": "4.0",
               "configuration": {
                 "url": "[concat(parameters('scriptBaseUri'),'/ConfigSQLServer.ps1.zip')]",
                 "script": "ConfigSQLServer.ps1",
