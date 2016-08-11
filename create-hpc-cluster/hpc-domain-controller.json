@@ -118,7 +118,7 @@
       "resources": [
         {
           "apiVersion": "[parameters('apiVersion')]",
-          "type": "extensions",
+          "type": "Microsoft.Compute/virtualMachines/extensions",
           "name": "[concat(parameters('vmName'),'/promoteDomainController')]",
           "location": "[resourceGroup().location]",
           "dependsOn": [
