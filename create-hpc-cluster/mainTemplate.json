@@ -571,11 +571,14 @@
           "dataDiskSizeInGB": {
             "value": 200
           },
-          "scriptBaseUri": {
-            "value": "[parameters('artifactsBaseUrl')]"
+          "clusterName": {
+            "value": "[parameters('clusterName')]"
           },
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
+          },
+          "scriptBaseUri": {
+            "value": "[parameters('artifactsBaseUrl')]"
           }
         }
       }

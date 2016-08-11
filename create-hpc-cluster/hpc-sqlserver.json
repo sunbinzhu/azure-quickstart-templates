@@ -56,6 +56,12 @@
         "description": "The data disk size in GB"
       }
     },
+    "clusterName": {
+      "type": "string",
+      "metadata": {
+        "description": "The HPC Pack cluster name."
+      }
+    },
     "privateDomainName": {
       "type": "string",
       "metadata": {
@@ -160,7 +166,8 @@
                 "function": "ConfigSQLServer"
               },
               "configurationArguments": {
-                "DomainName": "[parameters('privateDomainName')]"
+                "DomainName": "[parameters('privateDomainName')]",
+                "ClusterName": "[parameters('clusterName')]"
               }
             },
             "protectedSettings": {
