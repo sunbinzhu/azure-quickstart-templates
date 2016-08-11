@@ -39,6 +39,9 @@
     [String] $CNSize="",
 
     [Parameter(Mandatory=$false, ParameterSetName='NodePrepare')]
+    [String] $DBServerInstanceName="",
+
+    [Parameter(Mandatory=$false, ParameterSetName='NodePrepare')]
     [Switch] $UnsecureDNSUpdate,
 
     [Parameter(Mandatory=$true, ParameterSetName='NodeState')]
@@ -154,7 +157,7 @@ else
                 -ArgumentList @("$domainNetBios\$AdminUserName", (ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force))
 
          $job = Start-Job -ScriptBlock {
-             param($scriptPath, $domainUserCred, $AzureStorageConnStr, $PublicDnsName, $CNSize)
+             param($scriptPath, $domainUserCred, $DBServerInstanceName, $AzureStorageConnStr, $PublicDnsName, $CNSize)
 
              function TraceInfo($log)
              {
@@ -171,7 +174,7 @@ else
              {
                  TraceInfo 'register HPC Head Node Preparation Task'
                  # prepare headnode
-                 $dbArgs = '-DBServerInstance .\COMPUTECLUSTER'
+                 $dbArgs = '-DBServerInstance ' + $DBServerInstanceName + ' -RemoteDB'
                  $HNPreparePsFile = "$scriptPath\HPCHNPrepare.ps1"
                  $action = New-ScheduledTaskAction -Execute 'PowerShell.exe' -Argument "-ExecutionPolicy Unrestricted -Command `"& '$HNPreparePsFile' $dbArgs`""
                  Register-ScheduledTask -TaskName $HPCPrepareTaskName -Action $action -User $domainUserCred.UserName -Password $domainUserCred.GetNetworkCredential().Password -RunLevel Highest
@@ -378,7 +381,7 @@ else
                  TraceInfo 'Failed to prepare HPC Head Node'
                  throw "Failed to prepare HPC Head Node"
              }
-        } -ArgumentList $PSScriptRoot,$domainUserCred, $AzureStorageConnStr, $PublicDnsName, $CNSize
+        } -ArgumentList $PSScriptRoot,$domainUserCred, $DBServerInstanceName, $AzureStorageConnStr, $PublicDnsName, $CNSize
 
          if($domainRole -eq 5)
          {
