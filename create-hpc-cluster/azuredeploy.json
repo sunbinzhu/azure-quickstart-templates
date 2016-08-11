@@ -59,6 +59,32 @@
         "description": "The VM size for the head node"
       }
     },
+    "dcVMName": {
+      "type": "string",
+      "metadata": {
+        "description": "The VM name for the DC"
+      }
+    },
+    "dcVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A3",
+      "metadata": {
+        "description": "The VM size for the DC"
+      }
+    },
+    "sqlVMName": {
+      "type": "string",
+      "metadata": {
+        "description": "The VM name for the SQL server VM"
+      }
+    },
+    "sqlVMSize": {
+      "type": "string",
+      "defaultValue": "Standard_A3",
+      "metadata": {
+        "description": "The VM size for the SQL server VM"
+      }
+    },
     "computeNodeImage": {
       "type": "string",
       "defaultValue": "ComputeNode",
@@ -74,7 +100,7 @@
       "type": "string",
       "defaultValue": "IaaSCN-",
       "minLength": 1,
-      "maxLength": 12,      
+      "maxLength": 12,
       "metadata": {
         "description": "The name prefix of the compute nodes. It must be no more than 12 characters, begin with a letter, and contain only letters, numbers and hyphens. For example, if 'IaaSCN-' is specified, the compute node names will be 'IaaSCN-000', 'IaaSCN-001', ..."
       }
@@ -83,7 +109,7 @@
       "type": "int",
       "defaultValue": 2,
       "minValue": 1,
-      "maxValue": 500,      
+      "maxValue": 500,
       "metadata": {
         "description": "The number of the compute nodes"
       }
@@ -180,16 +206,18 @@
       "ComputeNode": {
         "publisher": "MicrosoftWindowsServerHPCPack",
         "offer": "WindowsServerHPCPack",
-        "sku": "2012R2CN"
+        "sku": "2012R2CN",
+        "version": "latest"
       },
       "ComputeNodeWithExcel": {
         "publisher": "MicrosoftWindowsServerHPCPack",
         "offer": "WindowsServerHPCPack",
-        "sku": "2012R2CNExcel"
+        "sku": "2012R2CNExcel",
+        "version": "latest"
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
-    "artifactsBaseUrl": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/create-hpc-cluster"
+    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/remotedb/create-hpc-cluster"
   },
   "resources": [
     {
@@ -230,14 +258,20 @@
           "computeNodeImageOsPlatform": {
             "value": "[variables('computeNodeImageOsPlatform')]"
           },
-          "computeNodeImagePublisher": {
-            "value": "[variables('currentComputeNodeImage').publisher]"
+          "dcVMName": {
+            "value": "[parameters('dcVMName')]"
           },
-          "computeNodeImageOffer": {
-            "value": "[variables('currentComputeNodeImage').offer]"
+          "dcVMSize": {
+            "value": "[parameters('dcVMSize')]"
           },
-          "computeNodeImageSku": {
-            "value": "[variables('currentComputeNodeImage').sku]"
+          "sqlVMName": {
+            "value": "[parameters('sqlVMName')]"
+          },
+          "sqlVMSize": {
+            "value": "[parameters('sqlVMSize')]"
+          },
+          "computeNodeImageReference": {
+            "value": "[variables('currentComputeNodeImage')]"
           },
           "computeNodeNamePrefix": {
             "value": "[parameters('computeNodeNamePrefix')]"
