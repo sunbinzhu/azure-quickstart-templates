@@ -98,6 +98,7 @@ else
     $HPCInfoLogFile = "$HPCHNDeployRoot\ConfigHeadNode-$datetimestr.log"
     $configFlagFile = "$HPCHNDeployRoot\HPCPackHeadNodeConfigured.flag"
     $postScriptFlagFile = "$HPCHNDeployRoot\PostConfigScriptExecution.flag"
+    $domainUserName = "$domainNetBios\$AdminUserName"
 
     if(-not (Test-Path -Path $HPCHNDeployRoot))
     {
@@ -111,12 +112,12 @@ else
         $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
         try
         {
-            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("$domainNetBios\$AdminUserName","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
+            $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($domainUserName,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
             $acl.AddAccessRule($rule)
         }
         catch
         {
-            Write-Error "Failed to grant access permissions to user '$domainNetBios\$AdminUserName'"
+            Write-Error "Failed to grant access permissions to user '$domainUserName'"
         }
 
         Set-Acl -Path $HPCHNDeployRoot -AclObject $acl -Confirm:$false
@@ -132,6 +133,41 @@ else
     }
     else
     {
+        $maxRetries = 3
+        $retry = 0
+        while($true)
+        {
+            try
+            {
+                TraceInfo "Adding user $domainUserName to local administrators group on $env:COMPUTERNAME"
+                $adminGroup = [ADSI]("WinNT://$env:COMPUTERNAME/administrators, group")
+                $tmpUserName = $domainUserName.Replace("\","/")
+                $adminGroup.Add("WinNT://$tmpUserName, user")
+                TraceInfo "The user $domainUserName successfully added to local administrators group on $env:COMPUTERNAME"
+                break
+            }
+            catch [System.Management.Automation.MethodInvocationException]
+            {
+                if ($_.Exception.InnerException -is [System.Runtime.InteropServices.COMException] -and $_.Exception.InnerException.ErrorCode -eq 0x80070562)
+                {
+                    TraceInfo "The user $domainUserName was already a member of local administrators group on $env:COMPUTERNAME"
+                    break
+                }
+
+                if($retry -lt $maxRetries)
+                {
+                    TraceInfo ("Failed to add user $domainUserName to local administrators group, retrying after 5 seconds: "+ $_)
+                    Start-Sleep -Seconds 5
+                    $retry++
+                }
+                else
+                {
+                    TraceInfo ("Failed to add user $domainUserName to local administrators group after $maxRetries retries: " + $_)
+                    throw
+                }
+            }
+        }
+
         if(-not [string]::IsNullOrEmpty($SubscriptionId))
         {
             New-Item -Path HKLM:\SOFTWARE\Microsoft\HPC -Name IaaSInfo -Force -Confirm:$false
@@ -154,7 +190,7 @@ else
         $AdminPassword = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($AdminBase64Password))
         $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
         $domainUserCred = New-Object -TypeName System.Management.Automation.PSCredential `
-                -ArgumentList @("$domainNetBios\$AdminUserName", (ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force))
+                -ArgumentList @($domainUserName, (ConvertTo-SecureString -String $AdminPassword -AsPlainText -Force))
 
          $job = Start-Job -ScriptBlock {
              param($scriptPath, $domainUserCred, $DBServerInstanceName, $AzureStorageConnStr, $PublicDnsName, $CNSize)
