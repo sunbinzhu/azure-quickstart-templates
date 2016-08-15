@@ -150,7 +150,7 @@ else
             {
                 if ($_.Exception.InnerException -is [System.Runtime.InteropServices.COMException] -and $_.Exception.InnerException.ErrorCode -eq 0x80070562)
                 {
-                    TraceInfo "The user $domainUserName was already a member of local administrators group on $env:COMPUTERNAME"
+                    TraceInfo "The user $domainUserName is already a member of local administrators group on $env:COMPUTERNAME"
                     break
                 }
 
