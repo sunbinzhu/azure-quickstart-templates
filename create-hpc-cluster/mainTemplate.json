@@ -205,9 +205,9 @@
     "availabilitySetNamePrefix": "[concat(parameters('clusterName'), '-avset')]",
     "nbrVMPerAvailabilitySet": 50,
     "availabilitySetNumber": "[add(div(variables('computeNodeNumber'), variables('nbrVMPerAvailabilitySet')), 1)]",
-    "nicNameSuffix": "[concat('-nic', uniqueString(variables('subnetRef')))]",
-    "nicNameDC": "[concat(parameters('dcVMName'), variables('nicNameSuffix'))]",
-    "nicNameHN": "[concat(parameters('clusterName'), variables('nicNameSuffix'))]",
+    "uniqueSuffix":"[uniqueString(variables('subnetRef'))]",
+    "nicNameDC": "[concat(parameters('dcVMName'), '-nic-', variables('uniqueSuffix'))]",
+    "nicNameHN": "[concat(parameters('clusterName'), '-nic-', variables('uniqueSuffix'))]",
     "vmSizeSuffix": "[uniqueString(resourceGroup().id)]",
     "suffixA8Size": "[concat('Standard_A8', variables('vmSizeSuffix'))]",
     "suffixA9Size": "[concat('Standard_A9', variables('vmSizeSuffix'))]",
@@ -341,6 +341,9 @@
           },
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
+          },
+          "subnetId": {
+            "value": "[variables('subnetRef')]"
           },
           "scriptBaseUri": {
             "value": "[parameters('artifactsBaseUrl')]"

@@ -70,8 +70,8 @@
     }
   },
   "variables": {
-    "nicName": "[concat(parameters('vmName'), '-nic', uniqueString(parameters('subnetId')))]",
-    "osDiskUri": "[concat('http://', parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-os', uniqueString(parameters('subnetId')), '.vhd')]",
+    "nicName": "[concat(parameters('vmName'), '-nic-', uniqueString(parameters('subnetId')))]",
+    "osDiskUri": "[concat('http://', parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-os-', uniqueString(parameters('subnetId')), '.vhd')]",
     "customData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=', parameters('imageReference').offer, '-', parameters('imageReference').sku, '\r\nVMSize=', parameters('vmSize')))]",
   },
   "resources": [
@@ -146,7 +146,8 @@
           "properties": {
             "publisher": "Microsoft.HpcCompute",
             "type": "HpcVmDrivers",
-            "typeHandlerVersion": "1.1"
+            "typeHandlerVersion": "1.1",
+            "autoUpgradeMinorVersion": true
           }
         },
         {

@@ -149,7 +149,7 @@ try
             $sqlfilename = $db + "DB.sql"
             Get-Content "$HPCBinPath\$sqlfilename" | %{$_.Replace("`$($dbNameVar)", $DBDic[$db])} | Set-Content "$env:temp\$sqlfilename" -Force
             Invoke-Sqlcmd -ServerInstance $DBServerInstance -Database $DBDic[$db] -InputFile "$env:temp\$sqlfilename" -QueryTimeout 300 -ErrorAction SilentlyContinue
-            Invoke-Sqlcmd -ServerInstance $DBServerInstance -Database $DBDic[$db] -InputFile "$HPCBinPath\AddDbUserForHpcService.sql" -Variable "TargetAccount=$machineAccount" -QueryTimeout 300
+#            Invoke-Sqlcmd -ServerInstance $DBServerInstance -Database $DBDic[$db] -InputFile "$HPCBinPath\AddDbUserForHpcService.sql" -Variable "TargetAccount=$machineAccount" -QueryTimeout 300
         }
 
         WriteLog "Inserting SDM Documents to HpcManagment database"

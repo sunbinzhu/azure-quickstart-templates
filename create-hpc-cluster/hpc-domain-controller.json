@@ -56,6 +56,12 @@
         "description": "The image reference"
       }
     },
+    "subnetId": {
+      "type": "string",
+      "metadata": {
+        "description": "The Id of the subnet in which the node is created"
+      }
+    },
     "privateDomainName": {
       "type": "string",
       "metadata": {
@@ -67,7 +73,11 @@
       "metadata": {
         "description": "The base URI of the script"
       }
-    }  
+    }
+  },
+  "variables": {
+    "osDiskUri": "[concat('http://', parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-os-', uniqueString(parameters('subnetId')), '.vhd')]",
+    "dataDiskUri": "[concat('http://', parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-data-', uniqueString(parameters('subnetId')), '.vhd')]"
   },
   "resources": [
     {
@@ -89,7 +99,7 @@
           "osDisk": {
             "name": "osdisk",
             "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-osdisk.vhd')]"
+              "uri": "[variables('osDiskUri')]"
             },
             "caching": "ReadOnly",
             "createOption": "FromImage"
@@ -98,7 +108,7 @@
             {
               "name": "datadisk",
               "vhd": {
-                "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-datadisk.vhd')]"
+                "uri": "[variables('dataDiskUri')]"
               },
               "caching": "None",
               "createOption": "Empty",
@@ -134,7 +144,7 @@
               "configuration": {
                 "url": "[concat(parameters('scriptBaseUri'),'/CreateADPDC.ps1.zip')]",
                 "script": "CreateADPDC.ps1",
-                "function": "CreateADPDC"              
+                "function": "CreateADPDC"
               },
               "configurationArguments": {
                 "DomainName": "[parameters('privateDomainName')]"
@@ -145,7 +155,7 @@
                 "AdminCreds": {
                   "UserName": "[parameters('adminUsername')]",
                   "Password": "[parameters('adminPassword')]"
-                }              
+                }
               }
             }
           }
