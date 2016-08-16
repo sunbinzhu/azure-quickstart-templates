@@ -98,6 +98,7 @@ else
     $HPCInfoLogFile = "$HPCHNDeployRoot\ConfigHeadNode-$datetimestr.log"
     $configFlagFile = "$HPCHNDeployRoot\HPCPackHeadNodeConfigured.flag"
     $postScriptFlagFile = "$HPCHNDeployRoot\PostConfigScriptExecution.flag"
+    $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
     $domainUserName = "$domainNetBios\$AdminUserName"
 
     if(-not (Test-Path -Path $HPCHNDeployRoot))
@@ -109,7 +110,6 @@ else
         $acl.AddAccessRule($rule)
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators","FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
         $acl.AddAccessRule($rule)
-        $domainNetBios = $DomainFQDN.Split('.')[0].ToUpper()
         try
         {
             $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($domainUserName,"FullControl", "ContainerInherit, ObjectInherit", "None", "Allow")
@@ -146,7 +146,7 @@ else
                 TraceInfo "The user $domainUserName successfully added to local administrators group on $env:COMPUTERNAME"
                 break
             }
-            catch [System.Management.Automation.MethodInvocationException]
+            catch
             {
                 if ($_.Exception.InnerException -is [System.Runtime.InteropServices.COMException] -and $_.Exception.InnerException.ErrorCode -eq 0x80070562)
                 {
