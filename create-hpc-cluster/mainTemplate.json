@@ -574,7 +574,7 @@
           "dataDiskSizeInGB": {
             "value": 200
           },
-          "clusterName": {
+          "headNodeNames": {
             "value": "[parameters('clusterName')]"
           },
           "privateDomainName": {

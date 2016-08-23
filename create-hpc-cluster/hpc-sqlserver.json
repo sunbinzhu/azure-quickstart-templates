@@ -56,7 +56,7 @@
         "description": "The data disk size in GB"
       }
     },
-    "clusterName": {
+    "headNodeNames": {
       "type": "string",
       "metadata": {
         "description": "The HPC Pack cluster name."
@@ -170,7 +170,7 @@
               },
               "configurationArguments": {
                 "DomainName": "[parameters('privateDomainName')]",
-                "ClusterName": "[parameters('clusterName')]"
+                "HeadNodeList": "[parameters('headNodeNames')]"
               }
             },
             "protectedSettings": {
