@@ -56,11 +56,25 @@
         "description": "The password of the administrator"
       }
     },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "The availability set name"
+      }
+    },
     "dataDiskSizeInGB": {
       "type": "int",
+      "defaultValue": 0,
       "allowedValues": [ 0, 200, 500, 1000 ],
       "metadata": {
         "description": "The data disk size in GB, 0 means no data disk"
+      }
+    },
+    "customData": {
+      "type": "string",
+      "defaultValue": "[base64('None')]",
+      "metadata": {
+        "description": "The custom data in base64 format"
       }
     },
     "domainName": {
@@ -104,13 +118,17 @@
       "name": "[parameters('vmName')]",
       "location": "[resourceGroup().location]",
       "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+        },
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminPassword": "[parameters('adminPassword')]",
+          "customData": "[parameters('customData')]"
         },
         "storageProfile": {
           "imageReference": "[parameters('imageReference')]",
