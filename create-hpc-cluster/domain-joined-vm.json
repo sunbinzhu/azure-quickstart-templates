@@ -77,6 +77,13 @@
         "description": "The custom data in base64 format"
       }
     },
+    "secrets": {
+      "type": "array",
+      "defaultValue": [ ],
+      "metadata": {
+        "description": "The property 'osProfile/secrets', specify the set of certificates that shall be installed on the VM"
+      }
+    },
     "domainName": {
       "type": "string",
       "metadata": {
@@ -128,7 +135,8 @@
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]",
-          "customData": "[parameters('customData')]"
+          "customData": "[parameters('customData')]",
+          "secrets": "[parameters('secrets')]"
         },
         "storageProfile": {
           "imageReference": "[parameters('imageReference')]",

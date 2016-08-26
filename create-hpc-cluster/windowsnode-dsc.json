@@ -56,6 +56,13 @@
         "description": "The availability set name"
       }
     },
+    "secrets": {
+      "type": "array",
+      "defaultValue": [ ],
+      "metadata": {
+        "description": "The property 'osProfile/secrets', specify the set of certificates that shall be installed on the VM"
+      }
+    },
     "dscSettings": {
       "type": "object",
       "metadata": {
@@ -113,7 +120,8 @@
           "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
           "adminPassword": "[parameters('adminPassword')]",
-          "customData": "[variables('customData')]"
+          "customData": "[variables('customData')]",
+          "secrets": "[parameters('secrets')]"
         },
         "storageProfile": {
           "imageReference": "[parameters('imageReference')]",
