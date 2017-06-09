@@ -236,6 +236,9 @@
           "computeNodeImageRef": {
             "value": "[variables('currentComputeNodeImage')]"
           },
+          "computeNodeImageCategory": {
+            "value": "user"
+          },
           "computeNodeNamePrefix": {
             "value": "[parameters('computeNodeNamePrefix')]"
           },
