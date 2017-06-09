@@ -8,12 +8,6 @@
         "description": "The API version"
       }
     },
-    "location": {
-      "type": "string",
-      "metadata": {
-        "description": "The location in which the resources are created"
-      }
-    },
     "vmName": {
       "type": "string",
       "metadata": {
@@ -26,10 +20,11 @@
         "description": "The VM role size"
       }
     },
-    "storageAccountName": {
+    "storageAccountType": {
       "type": "string",
+      "allowedValues": [ "Standard_LRS", "Premium_LRS" ],
       "metadata": {
-        "description": "The storage account name to store the VHD of the VM"
+        "description": "The storage account type for the disks of the VM"
       }
     },
     "nicName": {
@@ -56,6 +51,13 @@
         "description": "The availability set name"
       }
     },
+    "enableAutomaticUpdates": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Specify whether the VM is enabled for automatic updates"
+      }
+    },
     "scriptBaseUri": {
       "type": "string",
       "metadata": {
@@ -69,21 +71,23 @@
       }
     }
   },
-
   "resources": [
     {
-      "apiVersion": "[parameters('apiVersion')]",
+      "apiVersion": "2016-04-30-preview",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
-      "location": "[parameters('location')]",
+      "location": "[resourceGroup().location]",
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computername": "[parameters('vmName')]",
+          "computerName": "[parameters('vmName')]",
           "adminUsername": "[parameters('adminUsername')]",
-          "adminPassword": "[parameters('adminPassword')]"
+          "adminPassword": "[parameters('adminPassword')]",
+          "windowsConfiguration": {
+            "enableAutomaticUpdates": "[parameters('enableAutomaticUpdates')]"
+          }
         },
         "storageProfile": {
           "imageReference": {
@@ -93,22 +97,22 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "osdisk",
-            "vhd": {
-              "uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-osdisk.vhd')]"
-            },
+            "name": "[concat(parameters('vmName'), '-osdisk')]",
             "caching": "ReadOnly",
-            "createOption": "FromImage"
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[parameters('storageAccountType')]"
+            }
           },
           "dataDisks": [
             {
-              "name": "datadisk",
-              "vhd": {
-                "Uri": "[concat('http://',parameters('storageAccountName'),'.blob.core.windows.net/vhds/', toLower(parameters('vmName')), '-datadisk.vhd')]"
-              },
+              "name": "[concat(parameters('vmName'), '-datadisk')]",
               "caching": "None",
               "createOption": "Empty",
-              "diskSizeGB": "200",
+              "diskSizeGB": 500,
+              "managedDisk": {
+                "storageAccountType": "[parameters('storageAccountType')]"
+              },
               "lun": 0
             }
           ]
@@ -126,29 +130,31 @@
           "type": "Microsoft.Compute/virtualMachines/extensions",
           "name": "[concat(parameters('vmName'),'/promoteDomainController')]",
           "apiVersion": "[parameters('apiVersion')]",
-          "location": "[parameters('location')]",
+          "location": "[resourceGroup().location]",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
           ],
           "properties": {
             "publisher": "Microsoft.Powershell",
             "type": "DSC",
-            "typeHandlerVersion": "2.7",
+            "typeHandlerVersion": "2.24",
+            "autoUpgradeMinorVersion": true,
             "settings": {
-              "modulesUrl": "[concat(parameters('scriptBaseUri'),'CreateADPDC.ps1.zip')]",
-              "configurationFunction": "CreateADPDC.ps1\\CreateADPDC",
-              "wmfVersion": "4.0",
-              "Properties": {
-                "DomainName": "[parameters('privateDomainName')]",
-                "AdminCreds": {
-                  "UserName": "[parameters('adminUsername')]",
-                  "Password": "PrivateSettingsRef:AdminPassword"
-                }
+              "configuration": {
+                "url": "[concat(parameters('scriptBaseUri'),'/CreateADPDC.ps1.zip')]",
+                "script": "CreateADPDC.ps1",
+                "function": "CreateADPDC"
+              },
+              "configurationArguments": {
+                "DomainName": "[parameters('privateDomainName')]"
               }
             },
             "protectedSettings": {
-              "Items": {
-                "AdminPassword": "[parameters('adminPassword')]"
+              "configurationArguments": {
+                "AdminCreds": {
+                  "UserName": "[parameters('adminUsername')]",
+                  "Password": "[parameters('adminPassword')]"
+                }
               }
             }
           }
