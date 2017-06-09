@@ -52,7 +52,7 @@
       }
     },
     "computeNodeImageRef": {
-      "type": "string",
+      "type": "object",
       "metadata": {
         "description": "The VM image for the compute nodes"
       }
