@@ -211,11 +211,17 @@
     },
     "curCNOSPlatformRelated": "[variables('cnOsPlatformRelated')[parameters('computeNodeImageOsPlatform')]]",
     "computeNodeTemplateUrl": "[concat(parameters('artifactsBaseUrl'), '/', variables('curCNOSPlatformRelated').template)]",
-    "cnCustomDataImageNames": {
-      "public": "[concat(parameters('computeNodeImageRef').offer, '-', parameters('computeNodeImageRef').sku)]",
-      "user": "UserCustomedImage"
+    "publicCNCustomDataImageName": "[concat(parameters('computeNodeImageRef').offer, '-', parameters('computeNodeImageRef').sku)]",
+    "customDataImageNames": {
+      "public": {
+        "image": "[variables('publicCNCustomDataImageName')]"
+      },
+      "user": {
+        "image": "CustomUserImage"
+      }
     },
-    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=', parameters('computeNodeImageCategory'), '\r\nImageName=', variables('cnCustomDataImageNames')[parameters('computeNodeImageCategory')], '\r\nVMSize=', parameters('computeNodeVMSize')))]",
+    "customDataImageName": "[variables('customDataImageNames')[parameters('computeNodeImageCategory')]]",
+    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=', parameters('computeNodeImageCategory'), '\r\nImageName=', variables('customDataImageName').image, '\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "adminBase64Password": "[base64(parameters('adminPassword'))]",
     "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', parameters('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\" -ResourceGroup ', resourceGroup().name)]",
     "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(trim(parameters('headNodePostConfigScript'))), '\" ', variables('iaasInfoArg'))]",
