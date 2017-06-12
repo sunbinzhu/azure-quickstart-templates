@@ -214,6 +214,7 @@
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
+    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=', variables('currentComputeNodeImage').offer, '-', variables('currentComputeNodeImage').sku, '\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster"
   },
   "resources": [
@@ -254,6 +255,9 @@
           },
           "computeNodeVMSize": {
             "value": "[parameters('computeNodeVMSize')]"
+          },
+          "computeNodeCustomData": {
+            "value": "[variables('computeNodeCustomData')]"
           },
           "publicIPName": {
             "value": "[variables('publicIPAddressName')]"

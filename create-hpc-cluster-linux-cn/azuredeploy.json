@@ -101,7 +101,7 @@
       "type": "string",
       "defaultValue": "IaaSLnxCN-",
       "minLength": 1,
-      "maxLength": 12,      
+      "maxLength": 12,
       "metadata": {
         "description": "The name prefix of the compute nodes. It must be no more than 12 characters, begin with a letter, and contain only letters, numbers and hyphens. For example, if 'IaaSCN-' is specified, the compute node names will be 'IaaSCN-000', 'IaaSCN-001', ..."
       }
@@ -110,7 +110,7 @@
       "type": "int",
       "defaultValue": 2,
       "minValue": 1,
-      "maxValue": 500,      
+      "maxValue": 500,
       "metadata": {
         "description": "The number of the compute nodes"
       }
@@ -307,6 +307,7 @@
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
+    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=', variables('currentComputeNodeImage').offer, '-', variables('currentComputeNodeImage').sku, '\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster"
   },
   "resources": [
@@ -347,6 +348,9 @@
           },
           "computeNodeVMSize": {
             "value": "[parameters('computeNodeVMSize')]"
+          },
+          "computeNodeCustomData": {
+            "value": "[variables('computeNodeCustomData')]"
           },
           "publicIPName": {
             "value": "[variables('publicIPAddressName')]"
