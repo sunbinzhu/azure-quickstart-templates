@@ -17,6 +17,17 @@
         "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
     },
+    "headNodeDiskType": {
+      "type": "string",
+      "defaultValue": "HDD",
+      "allowedValues": [
+        "HDD",
+        "SSD"
+      ],
+      "metadata": {
+        "description": "The disk type of head node VM. Note that SSD only supports DS-series, DSv2-series, GS-series, and Fs-series VMs."
+      }
+    },
     "headNodeVMSize": {
       "type": "string",
       "defaultValue": "Standard_D4_v2",
@@ -71,16 +82,20 @@
         "description": "The VM size of the head node. Note that some VM sizes in the list are only available in some particular locations. Please check the availability and the price of the VM sizes at https://azure.microsoft.com/en-us/pricing/details/virtual-machines before deployment."
       }
     },
-    "computeNodeCustomImageName": {
+    "computeNodeSourceImageVhdUri": {
       "type": "string",
       "metadata": {
-        "description": "The custom compute node image name."
+        "description": "The Uri of the custom image. Note if 'computeNodeOSType' is specified as 'Windows', the image must have HPC Pack compute node installed, i.e. it was captured from an HPC Pack compute node."
       }
     },
-    "computeNodeCustomImageRG": {
+    "computeNodeOSType": {
       "type": "string",
+      "allowedValues": [
+        "Windows",
+        "Linux"
+      ],
       "metadata": {
-        "description": "The resource group in which the custom compute node image locates"
+        "description": "OS type of the custom image"
       }
     },
     "computeNodeNamePrefix": {
@@ -96,9 +111,20 @@
       "type": "int",
       "defaultValue": 2,
       "minValue": 1,
-      "maxValue": 500,
+      "maxValue": 50,      
       "metadata": {
         "description": "The number of the compute nodes"
+      }
+    },
+    "computeNodeDiskType": {
+      "type": "string",
+      "defaultValue": "HDD",
+      "allowedValues": [
+        "HDD",
+        "SSD"
+      ],
+      "metadata": {
+        "description": "The disk type of the compute node VMs. Note that SSD only supports DS-series, DSv2-series, GS-series, and Fs-series VMs."
       }
     },
     "computeNodeVMSize": {
@@ -197,21 +223,38 @@
     }
   },
   "variables": {
+    "customImageName": "hpccustomcnimage",
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
+    "soaStorageAccountName": "[toLower(concat('hpc', uniqueString(resourceGroup().id, toLower(parameters('clusterName')))))]",
+    "soaStorageAccountType": "Standard_LRS",
     "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-HN')]",
-    "computeNodeImageOsPlatform": "Windows",
-    "computeNodeImageId": "[resourceId(parameters('computeNodeCustomImageRG'), 'Microsoft.Compute/images', parameters('computeNodeCustomImageName'))]",
-    "currentComputeNodeImage": {
-      "id": "[variables('computeNodeImageId')]"
-    },
-    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=user\r\nImageName=UserCustomImage\r\nVMSize=', parameters('computeNodeVMSize')))]",
-    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster"
+    "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster-custom-image",
+    "sharedResxBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster"
   },
   "resources": [
+    {
+      "type": "Microsoft.Compute/images",
+      "apiVersion": "2016-04-30-preview",
+      "name": "[variables('customImageName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "storageProfile": {
+          "osDisk": {
+            "osType": "[parameters('computeNodeOSType')]",
+            "osState": "Generalized",
+            "blobUri": "[parameters('computeNodeSourceImageVhdUri')]",
+            "storageAccountType": "Standard_LRS"
+          }
+        }
+      }
+    },
     {
       "apiVersion": "2015-01-01",
       "type": "Microsoft.Resources/deployments",
       "name": "mainTemplate",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/images/', variables('customImageName'))]"
+      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -228,17 +271,25 @@
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
           },
+          "soaStorageAccountName": {
+            "value": "[variables('soaStorageAccountName')]"
+          },
+          "soaStorageAccountType": {
+            "value": "[variables('soaStorageAccountType')]"
+          },
+          "headNodeDiskType": {
+            "value": "[parameters('headNodeDiskType')]"
+          },
           "headNodeVMSize": {
             "value": "[parameters('headNodeVMSize')]"
           },
           "computeNodeImageOsPlatform": {
-            "value": "[variables('computeNodeImageOsPlatform')]"
+            "value": "[parameters('computeNodeOSType')]"
           },
           "computeNodeImageRef": {
-            "value": "[variables('currentComputeNodeImage')]"
-          },
-          "computeNodeImageCategory": {
-            "value": "user"
+            "value": {
+              "id": "[resourceId('Microsoft.Compute/images', variables('customImageName'))]"
+            }
           },
           "computeNodeNamePrefix": {
             "value": "[parameters('computeNodeNamePrefix')]"
@@ -246,11 +297,11 @@
           "computeNodeNumber": {
             "value": "[parameters('computeNodeNumber')]"
           },
+          "computeNodeDiskType": {
+            "value": "[parameters('computeNodeDiskType')]"
+          },
           "computeNodeVMSize": {
             "value": "[parameters('computeNodeVMSize')]"
-          },
-          "computeNodeCustomData": {
-            "value": "[variables('computeNodeCustomData')]"
           },
           "publicIPName": {
             "value": "[variables('publicIPAddressName')]"
@@ -277,7 +328,7 @@
             "value": "[trim(parameters('computeNodePostConfigScript'))]"
           },
           "artifactsBaseUrl": {
-            "value": "[variables('artifactsBaseUrl')]"
+            "value": "[variables('sharedResxBaseUrl')]"
           }
         }
       }

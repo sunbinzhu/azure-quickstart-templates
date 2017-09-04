@@ -72,15 +72,9 @@
     },
     "enableAutomaticUpdates": {
       "type": "bool",
-      "defaultValue": true,
+      "defaultValue": false,
       "metadata": {
         "description": "Specify whether the VM is enabled for automatic updates"
-      }
-    },
-    "scriptBaseUri": {
-      "type": "string",
-      "metadata": {
-        "description": "The base URI of the script"
       }
     },
     "clusterName": {
@@ -95,6 +89,12 @@
         "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
     },
+    "scriptBaseUri": {
+      "type": "string",
+      "metadata": {
+        "description": "The base URI of the script"
+      }
+    },
     "computeNodePostConfigScript": {
       "type": "string",
       "defaultValue": "",
@@ -103,7 +103,7 @@
       }    
     }
   },
-  "variables":{
+  "variables": {
   },
   "resources": [
     {

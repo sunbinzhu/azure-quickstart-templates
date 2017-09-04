@@ -17,6 +17,17 @@
         "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
     },
+    "headNodeDiskType": {
+      "type": "string",
+      "defaultValue": "HDD",
+      "allowedValues": [
+        "HDD",
+        "SSD"
+      ],
+      "metadata": {
+        "description": "The disk type of head node VM. Note that SSD only supports DS-series, DSv2-series, GS-series, and Fs-series VMs."
+      }
+    },
     "headNodeVMSize": {
       "type": "string",
       "defaultValue": "Standard_D4_v2",
@@ -115,6 +126,17 @@
         "description": "The number of the compute nodes"
       }
     },
+    "computeNodeDiskType": {
+      "type": "string",
+      "defaultValue": "HDD",
+      "allowedValues": [
+        "HDD",
+        "SSD"
+      ],
+      "metadata": {
+        "description": "The disk type of the compute node VMs. Note that SSD only supports DS-series, DSv2-series, GS-series, and Fs-series VMs."
+      }
+    },
     "computeNodeVMSize": {
       "type": "string",
       "defaultValue": "Standard_D3_v2",
@@ -200,6 +222,8 @@
   },
   "variables": {
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
+    "soaStorageAccountName": "[toLower(concat('hpc', uniqueString(resourceGroup().id, toLower(parameters('clusterName')))))]",
+    "soaStorageAccountType": "Standard_LRS",
     "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-HN')]",
     "computeNodeImageOsPlatform": "Linux",
     "computeNodeImages": {
@@ -307,7 +331,6 @@
       }
     },
     "currentComputeNodeImage": "[variables('computeNodeImages')[parameters('computeNodeImage')]]",
-    "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=public\r\nImageName=', variables('currentComputeNodeImage').offer, '-', variables('currentComputeNodeImage').sku, '\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "artifactsBaseUrl": "https://raw.githubusercontent.com/sunbinzhu/azure-quickstart-templates/InTest/create-hpc-cluster"
   },
   "resources": [
@@ -331,6 +354,15 @@
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
           },
+          "soaStorageAccountName": {
+            "value": "[variables('soaStorageAccountName')]"
+          },
+          "soaStorageAccountType": {
+            "value": "[variables('soaStorageAccountType')]"
+          },
+          "headNodeDiskType": {
+            "value": "[parameters('headNodeDiskType')]"
+          },
           "headNodeVMSize": {
             "value": "[parameters('headNodeVMSize')]"
           },
@@ -346,11 +378,11 @@
           "computeNodeNumber": {
             "value": "[parameters('computeNodeNumber')]"
           },
+          "computeNodeDiskType": {
+            "value": "[parameters('computeNodeDiskType')]"
+          },
           "computeNodeVMSize": {
             "value": "[parameters('computeNodeVMSize')]"
-          },
-          "computeNodeCustomData": {
-            "value": "[variables('computeNodeCustomData')]"
           },
           "publicIPName": {
             "value": "[variables('publicIPAddressName')]"
