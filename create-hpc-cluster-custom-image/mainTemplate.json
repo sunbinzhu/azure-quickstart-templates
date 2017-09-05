@@ -23,10 +23,30 @@
         "description": "The fully qualified domain name (FQDN) for the private domain forest which will be created by this template, for example 'hpc.local'."
       }
     },
+    "soaStorageAccountCreateOption": {
+      "type": "string",
+      "defaultValue": "dummy",
+      "allowedValues": [
+        "dummy",
+        "new",
+        "existing"
+      ],
+      "metadata": {
+        "description": "Indicates how to create the storage account for SOA common data and SOA session monitoring features."
+      }
+    },
+    "soaStorageAccountRGName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource group for the existing storage account"
+      }
+    },
     "soaStorageAccountName": {
       "type": "string",
+      "defaultValue": "",
       "metadata": {
-        "description": "The name prefix of the new storage accounts to be created to store the VM disks: one storage account dedicated to the head node, and one storage account for every certain number of compute nodes specified by parameter 'nbrCNPerStorageAccount'. "
+        "description": "The storage account to be created for SOA common data and SOA session monitoring features"
       }
     },
     "soaStorageAccountType": {
@@ -181,7 +201,6 @@
       "HDD": "Standard_LRS",
       "SSD": "Premium_LRS"
     },
-    "soaStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts',parameters('soaStorageAccountName'))]",
     "addressPrefix": "10.0.0.0/16",
     "subnet1Name": "Subnet-1",
     "subnet1Prefix": "10.0.0.0/22",
@@ -224,17 +243,33 @@
     "computeNodeCustomData": "[base64(concat('HPCClusterName=', parameters('clusterName'), '\r\nImageCategory=user\r\nVMSize=', parameters('computeNodeVMSize')))]",
     "adminBase64Password": "[base64(parameters('adminPassword'))]",
     "iaasInfoArg": "[concat('-SubscriptionId ', subscription().subscriptionId, ' -VNet ', parameters('virtualNetworkName'), ' -Subnet ', variables('subnet1Name'), ' -Location \"', resourceGroup().location, '\" -ResourceGroup ', resourceGroup().name)]",
-    "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(trim(parameters('headNodePostConfigScript'))), '\" ', variables('iaasInfoArg'))]",
-    "soaStorageConnStrPrefix": "[concat('DefaultEndpointsProtocol=https;AccountName=', parameters('soaStorageAccountName'), ';AccountKey=')]"
+    "headNodeCommandStr": "[concat('powershell.exe -ExecutionPolicy Unrestricted -File PrepareHN.ps1 -DomainFQDN ', parameters('privateDomainName'), ' -AdminUserName ', parameters('adminUsername'), ' -AdminBase64Password \"', variables('adminBase64Password'), '\" -CNSize ', parameters('computeNodeVMSize'), ' -PostConfigScript \"', base64(trim(parameters('headNodePostConfigScript'))), '\" ', variables('iaasInfoArg'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[parameters('soaStorageAccountName')]",
-      "apiVersion": "[variables('apiVersion')]",
-      "location": "[resourceGroup().location]",
+      "name": "prepareSOAStorageAccount",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2015-01-01",
       "properties": {
-        "accountType": "[parameters('soaStorageAccountType')]"
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('artifactsBaseUrl'), '/storageaccount-', parameters('soaStorageAccountCreateOption'), '.json')]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "apiVersion": {
+            "value": "[variables('apiVersion')]"
+          },
+          "storageAccountRGName": {
+            "value": "[parameters('soaStorageAccountRGName')]"
+          },
+          "storageAccountName": {
+            "value": "[parameters('soaStorageAccountName')]"
+          },
+          "storageAccountType": {
+            "value": "[parameters('soaStorageAccountType')]"
+          }
+        }
       }
     },
     {
@@ -423,7 +458,7 @@
       "name": "[concat(parameters('clusterName'),'/configureHeadNode')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Storage/storageAccounts/', parameters('soaStorageAccountName'))]",
+        "prepareSOAStorageAccount",
         "Microsoft.Resources/deployments/updateVNetDNS"
       ],
       "properties": {
@@ -438,7 +473,7 @@
           ]
         },
         "protectedSettings": {
-          "commandToExecute": "[concat(variables('headNodeCommandStr'), ' -AzureStorageConnStr \"', variables('soaStorageConnStrPrefix'), listKeys(variables('soaStorageAccountId'),variables('apiVersion')).key1, '\" -PublicDnsName ', reference('setupClusterPublicIP').outputs.fqdn.value)]"
+          "commandToExecute": "[concat(variables('headNodeCommandStr'), ' -AzureStorageConnStr \"', reference('prepareSOAStorageAccount').outputs.connectionString.value, '\" -PublicDnsName ', reference('setupClusterPublicIP').outputs.fqdn.value)]"
         }
       }
     },

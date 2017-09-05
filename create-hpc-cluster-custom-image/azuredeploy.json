@@ -225,6 +225,10 @@
   "variables": {
     "customImageName": "hpccustomcnimage",
     "virtualNetworkName": "[concat(parameters('clusterName'), 'VNet')]",
+    "soaStorageAccountCreateOptions": {
+      "Windows": "new",
+      "Linux": "dummy"
+    },
     "soaStorageAccountName": "[toLower(concat('hpc', uniqueString(resourceGroup().id, toLower(parameters('clusterName')))))]",
     "soaStorageAccountType": "Standard_LRS",
     "publicIPAddressName": "[concat(parameters('clusterName'), '-PublicIP-HN')]",
@@ -271,6 +275,12 @@
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
           },
+          "soaStorageAccountCreateOption": {
+            "value": "new"
+          },
+          "soaStorageAccountRGName": {
+            "value": "[resourceGroup().name]"
+          },
           "soaStorageAccountName": {
             "value": "[variables('soaStorageAccountName')]"
           },
@@ -310,7 +320,7 @@
             "value": "[resourceGroup().name]"
           },
           "publicIPNewOrExisting": {
-            "value": "new"
+            "value": "[variables('soaStorageAccountCreateOptions')[parameters('computeNodeOSType')]]"
           },
           "publicIPDNSNameLabel": {
             "value": "[parameters('clusterName')]"

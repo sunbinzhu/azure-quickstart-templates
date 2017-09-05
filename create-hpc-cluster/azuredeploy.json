@@ -261,6 +261,12 @@
           "privateDomainName": {
             "value": "[parameters('privateDomainName')]"
           },
+          "soaStorageAccountCreateOption": {
+            "value": "new"
+          },
+          "soaStorageAccountRGName": {
+            "value": "[resourceGroup().name]"
+          },
           "soaStorageAccountName": {
             "value": "[variables('soaStorageAccountName')]"
           },
